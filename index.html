@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DeepSeek 4.1 · Complete Social Hub</title>
+  <!-- Google Fonts: elegant & unique -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase SDK v9 modular (import map) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+        "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .global-gradient { background: linear-gradient(to right, #0f766e, #22c55e, #2dd4bf, #22d3ee, #38bdf8, #60a5fa, #818cf8, #c4b5fd); }
+    body { background: #F8F9FA; overflow-x: hidden; }
+    /* ========== SIDEBAR (strict Cerulean + Carolina) ========== */
+    .sidebar {
+      position: fixed; top: 0; left: -300px; width: 280px; height: 100vh;
+      background: linear-gradient(145deg, #007BA7 0%, #56A0D3 100%);
+      z-index: 1200; transition: left 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+      overflow-y: auto; box-shadow: 4px 0 20px rgba(0,0,0,0.3); color: white;
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-logo { text-align: center; padding: 30px 0 12px; font-size: 28px; font-weight: 800; animation: gentlePulse 2s infinite; }
+    @keyframes gentlePulse { 0% { text-shadow: 0 0 0 rgba(255,255,200,0.3); } 70% { text-shadow: 0 0 12px rgba(255,255,200,0.8); } 100% { text-shadow: 0 0 0 rgba(255,255,200,0.3); } }
+    .social-row { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 6px; padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.3); margin-bottom: 16px; }
+    .social-app-card { display: flex; flex-direction: column; align-items: center; cursor: pointer; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 32px; transition: 0.15s; min-width: 65px; font-size: 10px; font-weight: 500; }
+    .social-app-card:hover { background: rgba(0,0,0,0.4); transform: scale(1.02); }
+    .social-app-card img { width: 28px; height: 28px; border-radius: 8px; margin-bottom: 4px; }
+    .ocean-wave-animation { width: 100%; height: 6px; background: repeating-linear-gradient(90deg, #22d3ee, #38bdf8, #0f766e); background-size: 200% 100%; animation: waveFlow 1.5s linear infinite; border-radius: 10px; margin-top: 4px; }
+    @keyframes waveFlow { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+    .menu-item { display: flex; align-items: center; gap: 14px; padding: 12px 20px; margin: 5px 12px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); }
+    .signout-item { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); color: #ffb4a2; }
+    .feature-strip { font-size: 10px; text-align: center; padding: 12px; background: rgba(0,0,0,0.2); margin: 20px 12px; border-radius: 40px; white-space: nowrap; overflow-x: auto; }
+    .main-content { margin-left: 0; transition: margin-left 0.2s; min-height: 100vh; }
+    .top-header { display: flex; justify-content: flex-end; align-items: center; padding: 16px 24px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.03); gap: 16px; }
+    .menu-toggle-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #007BA7; margin-right: auto; }
+    .user-avatar-sm { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #56A0D3; }
+    .page-container { padding: 24px; max-width: 1300px; margin: 0 auto; }
+    .bubble-user { background: #56A0D3; color: white; border-radius: 20px; padding: 10px 16px; max-width: 80%; margin: 8px 0 8px auto; align-self: flex-end; }
+    .bubble-bot { background: #007BA7; color: white; border-radius: 20px; padding: 10px 16px; max-width: 80%; margin: 8px 0; }
+    .tab-switch { display: flex; gap: 16px; margin-bottom: 20px; }
+    .tab { padding: 8px 22px; border-radius: 40px; background: #e9ecef; cursor: pointer; font-weight: 500; }
+    .tab.active { background: #74ACDF; color: white; }
+    .user-list-card { display: flex; align-items: center; gap: 12px; padding: 10px; background: #e2e6ea; margin: 8px 0; border-radius: 28px; cursor: pointer; transition: 0.1s; }
+    .badge-count { background: #ff4444; color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; margin-left: auto; }
+    .screenshot-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; color: #87CEEB; font-size: 28px; font-weight: bold; backdrop-filter: blur(8px); animation: fadeOutMsg 2s forwards; pointer-events: none; }
+    @keyframes fadeOutMsg { 0% { opacity: 1; visibility: visible; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+    body.dark .main-content { background: #2c2c2c; color: #eee; }
+    body.dark .top-header { background: #1e1e1e; color: white; }
+    body.dark .page-container { background: #2c2c2c; }
+    body.dark .user-list-card { background: #3a3a3a; color: white; }
+    body.dark .news-card { background: #3a3a3a; color: white; }
+    body.dark .bubble-user { background: #2c7da0; }
+    body.dark .bubble-bot { background: #1f6390; }
+    body.dark .tab { background: #555; color: white; }
+    body.dark .tab.active { background: #74ACDF; }
+    .news-card { background: white; border-radius: 24px; padding: 14px; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    @media (max-width: 640px) { .page-container { padding: 16px; } .top-header { padding: 12px 16px; } }
+  </style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">🌊 DeepSeek 4.1</div>
+  <div class="social-row" id="socialAppsRow"></div>
+  <div class="menu-list">
+    <div class="menu-item" data-page="dashboard"><i data-lucide="home"></i> Dashboard</div>
+    <div class="menu-item" data-page="messages"><i data-lucide="message-circle"></i> Messages <span id="msgBadgeSide" class="badge-count" style="display:none;">●</span></div>
+    <div class="menu-item" data-page="timeline"><i data-lucide="rss"></i> Timeline</div>
+    <div class="menu-item" data-page="discover"><i data-lucide="compass"></i> Discover</div>
+    <div class="menu-item" data-page="create"><i data-lucide="plus-circle"></i> Create</div>
+    <div class="menu-item" data-page="account"><i data-lucide="user"></i> Account</div>
+    <div class="menu-item" data-page="myvault"><i data-lucide="lock"></i> My Vault</div>
+    <div class="menu-item" data-page="saved"><i data-lucide="archive"></i> Saved</div>
+    <div class="menu-item" data-page="preferences"><i data-lucide="settings"></i> Preferences</div>
+    <div class="menu-item signout-item" id="signOutBtn"><i data-lucide="log-out"></i> Sign Out</div>
+  </div>
+  <div class="feature-strip">⚡ Dashboard · Messages · Timeline · Discover · Create · My Vault · Saved · Preferences</div>
+</div>
+<div class="main-content" id="mainContent">
+  <div class="top-header">
+    <button class="menu-toggle-btn" id="menuToggleBtn">☰</button>
+    <div id="userTopInfo"></div>
+  </div>
+  <div class="page-container" id="appContainer">Loading...</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "firebase/app";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, arrayUnion, arrayRemove } from "firebase/firestore";
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
+  // ========== 🔥 FIREBASE CONFIG (REPLACE WITH YOUR CREDENTIALS) ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyDummyReplaceWithRealKey123456",
+    authDomain: "your-app.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-app.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef123456"
+  };
+  // =========================================================================
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  const provider = new GoogleAuthProvider();
+
+  let currentUser = null;
+  let currentPage = "dashboard";
+  let unsubscribeList = [];
+
+  function cleanListeners() { unsubscribeList.forEach(fn => fn()); unsubscribeList = []; }
+  function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+
+  function showScreenshotBlock() {
+    let div = document.createElement("div");
+    div.className = "screenshot-overlay";
+    div.innerText = "Sorry, We Can't Provide";
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2000);
+  }
+  function protectPage() {
+    window.addEventListener("keyup", e => { if(e.key === "PrintScreen") showScreenshotBlock(); });
+    document.addEventListener("contextmenu", e => { if(currentPage !== "dashboard" && currentPage !== "account") showScreenshotBlock(); });
+  }
+  protectPage();
+
+  async function renderPage() {
+    const container = document.getElementById("appContainer");
+    if (!currentUser) {
+      container.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; min-height:70vh; flex-direction:column;"><div class="global-gradient" style="padding:20px 40px; border-radius:60px;"><h2 style="color:white;">DeepSeek 4.1 · Social Nexus</h2></div><button id="googleSignInBtn" style="margin-top:30px; background:#007BA7; border:none; padding:12px 28px; border-radius:40px; color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" viewBox="0 0 24 24"><path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Sign in with Google</button></div>`;
+      document.getElementById("googleSignInBtn")?.addEventListener("click", () => signInWithPopup(auth, provider));
+      return;
+    }
+    cleanListeners();
+    switch(currentPage) {
+      case "dashboard": await renderDashboard(container); break;
+      case "messages": await renderMessages(container); break;
+      case "timeline": await renderTimeline(container); break;
+      case "discover": await renderDiscover(container); break;
+      case "create": await renderCreate(container); break;
+      case "account": await renderAccount(container); break;
+      case "myvault": await renderMyVault(container); break;
+      case "saved": await renderSaved(container); break;
+      case "preferences": await renderPreferences(container); break;
+      default: renderDashboard(container);
+    }
+  }
+
+  // ========== DASHBOARD (Complete with auto-response, news, language toggle) ==========
+  async function renderDashboard(container) {
+    container.innerHTML = `
+      <div style="background:#F8F8FF; border-radius:36px; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+          <h1 style="background:linear-gradient(135deg,#007BA7,#56A0D3); -webkit-background-clip:text; background-clip:text; color:transparent;">🌊 How can I help you today?</h1>
+          <div><img src="${currentUser.photoURL}" class="user-avatar-sm"><div style="font-size:12px;">${currentUser.email}</div></div>
+        </div>
+        <div style="margin:20px 0;"><textarea id="helpQuery" rows="2" placeholder="Describe what you want to create or ask anything..." style="width:100%; border-radius:28px; border:1px solid #ccc; padding:14px;"></textarea><button id="sendQueryBtn" style="margin-top:10px; background:#007BA7; color:white; border:none; border-radius:40px; padding:10px 24px;">Send</button></div>
+        <div id="responseHistory" style="background:#F1F3F5; border-radius:28px; padding:16px; min-height:140px;"></div>
+        <details style="margin-top:20px;"><summary style="cursor:pointer; font-weight:bold;">▼ STARTING POINTS</summary><div id="startingPointsDynamic"></div></details>
+      </div>
+    `;
+    const startDiv = document.getElementById("startingPointsDynamic");
+    const pills = ['All', 'Art & Illustration', 'Product Design', 'Branding', 'News', 'Case Studies', 'Harassment Awareness', 'Artificial Intelligence', 'Love & Relationships'];
+    startDiv.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:10px;">${pills.map(p => `<span style="background:#e2e8f0; padding:6px 16px; border-radius:40px;">${p}</span>`).join('')}</div><div id="newsSectionDashboard"></div>`;
+    await renderNewsSection(document.getElementById("newsSectionDashboard"));
+
+    async function processQuery() {
+      let input = document.getElementById("helpQuery").value.trim();
+      if (!input) return;
+      const respDiv = document.getElementById("responseHistory");
+      respDiv.innerHTML += `<div class="bubble-user">${escapeHtml(input)}</div>`;
+      let answer = "";
+      const lower = input.toLowerCase();
+      // Rule-based auto-response
+      if (lower.includes("owner") || lower.includes("malik") || lower.includes("boss") || lower.includes("creator") || lower.includes("tumhara owner")) {
+        answer = "Mujhe Sahil ne banaya hai. Unse milna ho toh: wa.me/9313195257 · Instagram: @suthariya_sahil · Facebook: DySahil · YouTube: @dysahil.1";
+      } else if (lower.includes("image banao") || lower.includes("image create") || lower.includes("generate image") || lower.includes("photo banao")) {
+        answer = "Image create ke liye ChatGPT use karo! <a href='https://chatgpt.com' target='_blank' style='color:#FFD966;'>Open ChatGPT</a>";
+      } else if (lower.match(/^[^a-zA-Z0-9\s\u0900-\u097F]+$/) && lower.length < 7) {
+        answer = "Aap kya kehna chahte the? Please dobara likhein 😊";
+      } else if (lower.includes("help") || lower.includes("kar sakte ho") || lower.includes("features")) {
+        answer = "Main features: Dashboard (auto-response), Messages (public+private), Timeline (posts), Discover (users), Create (upload), My Vault (private), Saved, Preferences. Real-time, screenshot protection, admin controls!";
+      } else if (lower.includes("link") || lower.includes("share")) {
+        answer = "Link share karne ke liye Timeline ya Private section better rahega!";
+      } else {
+        answer = "Yeh mere scope se bahar hai. DeepSeek pe puchho → <a href='https://deepseek.com' target='_blank'>deepseek.com</a>";
+      }
+      answer += `<div style="margin-top:8px; color:#56A0D3;">— @suthariya_sahil</div>`;
+      respDiv.innerHTML += `<div class="bubble-bot">${answer}</div>`;
+      respDiv.scrollTop = respDiv.scrollHeight;
+      document.getElementById("helpQuery").value = "";
+    }
+    document.getElementById("sendQueryBtn").onclick = processQuery;
+    document.getElementById("helpQuery").addEventListener("keypress", e => { if(e.key === "Enter") processQuery(); });
+  }
+
+  async function renderNewsSection(container) {
+    const newsItems = [
+      { title: "AI & Global Ethics Summit", summary: "World leaders discuss AI regulations", lang: { en:"AI Summit 2025: Ethics & Global Pact", hi:"एआई सम्मेलन 2025: नैतिकता वैश्विक समझौता", gu:"AI સમિટ 2025: નૈતિકતા અને વૈશ્વિક કરાર", hinglish:"AI Summit 2025: Ethics aur Global Pact" } },
+      { title: "New Harassment Laws Enacted", summary: "Stricter penalties for online abuse", lang: { en:"Stricter harassment laws now active", hi:"उत्पीड़न कानून सख्त हुए", gu:"સતામણી કાયદા કડક બન્યા", hinglish:"Harassment laws ab strict ho gaye" } },
+      { title: "AI Breakthrough: DeepSeek 5.0", summary: "Next-gen reasoning model", lang: { en:"DeepSeek 5.0 revolutionizes AI", hi:"डीपसीक 5.0 ने AI क्रांति ला दी", gu:"DeepSeek 5.0 એ AI ક્રાંતિ લાવી", hinglish:"DeepSeek 5.0 ne AI mein kranti la di" } },
+      { title: "Love in Digital Age", summary: "How relationships evolve online", lang: { en:"Modern love trends", hi:"डिजिटल युग में प्यार", gu:"ડિજિટલ યુગમાં પ્રેમ", hinglish:"Digital age mein pyaar ke naye trends" } }
+    ];
+    let currentLang = "en";
+    container.innerHTML = `<div><select id="newsLangSelect"><option value="en">English</option><option value="hi">हिंदी</option><option value="gu">ગુજરાતી</option><option value="hinglish">Hinglish</option></select></div><div id="newsCardsList"></div>`;
+    function renderNews() {
+      const cardsDiv = document.getElementById("newsCardsList");
+      cardsDiv.innerHTML = newsItems.map(n => `<div class="news-card"><svg width="50" height="40" viewBox="0 0 80 50" style="background:#38bdf8; border-radius:12px;"><rect width="80" height="50" fill="#56A0D3" /><text x="10" y="30" fill="white">📰</text></svg><h3>${n.lang[currentLang] || n.title}</h3><p>${n.lang[currentLang+"_sum"] || n.summary}</p></div>`).join('');
+    }
+    document.getElementById("newsLangSelect").addEventListener("change", (e) => { currentLang = e.target.value; renderNews(); });
+    renderNews();
+  }
+
+  // ========== MESSAGES (Public + Private with full features) ==========
+  async function renderMessages(container) {
+    container.innerHTML = `<div class="tab-switch"><div class="tab active" data-mode="public">Publicly Message</div><div class="tab" data-mode="private">Private Message</div></div><div id="msgPanel"></div>`;
+    let mode = "public";
+    const panel = document.getElementById("msgPanel");
+
+    function loadPublic() {
+      panel.innerHTML = `<div id="publicChatArea" style="height:450px; overflow-y:auto; background:#74ACDF; border-radius:28px; padding:16px;"></div><div style="display:flex; margin-top:12px;"><input id="publicMsgInput" style="flex:1; padding:12px; border-radius:40px; border:none;"><button id="sendPublicMsg" style="background:#007BA7; border:none; border-radius:40px; padding:0 20px; margin-left:8px;">Send</button></div>`;
+      const chatDiv = document.getElementById("publicChatArea");
+      const q = query(collection(db, "publicMessages"), orderBy("createdAt", "desc"), limit(100));
+      const unsub = onSnapshot(q, (snap) => {
+        chatDiv.innerHTML = snap.docs.map(doc => {
+          const data = doc.data();
+          return `<div class="public-msg-card" data-id="${doc.id}" style="background:white; margin:10px; border-radius:24px; padding:12px;"><img src="${data.photoURL}" width="32" style="border-radius:50%"> <strong>${data.username}</strong> <span>${data.text}</span> <small>${data.createdAt?.toDate().toLocaleTimeString()}</small><div><span class="likePub" data-id="${doc.id}" style="cursor:pointer; margin-right:12px;">❤️ Like</span><span class="replyPub" data-id="${doc.id}" style="cursor:pointer;">💬 Reply</span></div><div class="replies-${doc.id}" style="margin-left:20px;"></div></div>`;
+        }).join('');
+        // Double-tap like
+        document.querySelectorAll(".public-msg-card").forEach(card => {
+          let lastTap = 0;
+          card.addEventListener("touchstart", (e) => { const now = Date.now(); if (now - lastTap < 300) { e.preventDefault(); alert("❤️ Liked (no count)"); } lastTap = now; });
+        });
+        document.querySelectorAll(".likePub").forEach(btn => btn.onclick = () => alert("❤️ Liked (no count)"));
+        document.querySelectorAll(".replyPub").forEach(btn => btn.onclick = () => { const reply = prompt("Write your reply:"); if(reply) alert("Reply sent (demo)"); });
+      });
+      unsubscribeList.push(unsub);
+      document.getElementById("sendPublicMsg").onclick = async () => {
+        const txt = document.getElementById("publicMsgInput").value;
+        if(txt) await addDoc(collection(db, "publicMessages"), { uid: currentUser.uid, username: currentUser.displayName, photoURL: currentUser.photoURL, text: txt, createdAt: serverTimestamp() });
+        document.getElementById("publicMsgInput").value = "";
+      };
+    }
+
+    async function loadPrivate() {
+      panel.innerHTML = `<input id="searchPrivate" placeholder="🔍 Search users..." style="padding:10px; width:100%; border-radius:40px; border:1px solid #ccc;"><div id="privateUsersList" style="background:#aaa9a9; border-radius:28px; padding:12px; margin-top:12px;"></div><div id="activePrivateChat" style="margin-top:20px;"></div>`;
+      const usersSnap = await getDocs(collection(db, "users"));
+      let users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.uid !== currentUser.uid);
+      const listDiv = document.getElementById("privateUsersList");
+      function renderUsers(filter = "") {
+        const filtered = users.filter(u => u.username.toLowerCase().includes(filter.toLowerCase()));
+        listDiv.innerHTML = filtered.map(u => `<div class="user-list-card" data-uid="${u.uid}"><img src="${u.photoURL}" width="42" style="border-radius:50%"><span><strong>${u.username}</strong></span><span id="badge-${u.uid}" class="badge-count" style="display:none;">●</span></div>`).join('');
+        document.querySelectorAll(".user-list-card").forEach(el => el.addEventListener("click", () => openPrivateChat(el.dataset.uid)));
+      }
+      document.getElementById("searchPrivate").addEventListener("input", (e) => renderUsers(e.target.value));
+      renderUsers();
+
+      async function openPrivateChat(partnerUid) {
+        const chatId = [currentUser.uid, partnerUid].sort().join("_");
+        const msgsRef = collection(db, "privateChats", chatId, "messages");
+        const chatContainer = document.getElementById("activePrivateChat");
+        chatContainer.innerHTML = `<div id="chatWindow" style="height:300px; overflow-y:auto; background:#F3F3F0; border-radius:24px; padding:12px;"></div><div style="display:flex; margin-top:12px;"><input id="privateMsgInput" style="flex:1; padding:10px; border-radius:40px;"><button id="sendPrivateMsgBtn">Send</button></div>`;
+        const unsubMsgs = onSnapshot(query(msgsRef, orderBy("createdAt")), snap => {
+          const win = document.getElementById("chatWindow");
+          win.innerHTML = snap.docs.map(d => {
+            const data = d.data();
+            const isMine = data.senderUid === currentUser.uid;
+            return `<div style="text-align:${isMine?'right':'left'}; margin:6px;"><div style="display:inline-block; background:${isMine?'#56A0D3':'#cccccc'}; padding:8px 14px; border-radius:24px;"><span>${data.text}</span> <small>${data.createdAt?.toDate().toLocaleTimeString()}</small><div><span class="editMsg" data-id="${d.id}" style="font-size:10px; cursor:pointer;">✏️</span> <span class="deleteForMe" data-id="${d.id}" style="font-size:10px; cursor:pointer;">🗑️Me</span> <span class="deleteEveryone" data-id="${d.id}" style="font-size:10px; cursor:pointer;">🔥All</span></div></div></div>`;
+          }).join('');
+          document.querySelectorAll(".editMsg").forEach(btn => btn.onclick = async () => { const newText = prompt("Edit message:"); if(newText) await updateDoc(doc(msgsRef, btn.dataset.id), { text: newText }); });
+          document.querySelectorAll(".deleteForMe").forEach(btn => btn.onclick = async () => { await deleteDoc(doc(msgsRef, btn.dataset.id)); });
+          document.querySelectorAll(".deleteEveryone").forEach(btn => btn.onclick = async () => { if(confirm("Delete for everyone?")) await deleteDoc(doc(msgsRef, btn.dataset.id)); });
+        });
+        unsubscribeList.push(unsubMsgs);
+        document.getElementById("sendPrivateMsgBtn").onclick = async () => {
+          const txt = document.getElementById("privateMsgInput").value;
+          if(txt) await addDoc(msgsRef, { senderUid: currentUser.uid, text: txt, createdAt: serverTimestamp() });
+          document.getElementById("privateMsgInput").value = "";
+        };
+      }
+    }
+    document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => { mode = t.dataset.mode; if(mode==="public") loadPublic(); else loadPrivate(); }));
+    loadPublic();
+  }
+
+  // ========== TIMELINE (public posts, admin delete) ==========
+  async function renderTimeline(container) {
+    container.innerHTML = `<div id="timelineFeed" style="background:#FFFDD0; border-radius:32px; padding:20px;">Loading posts...</div>`;
+    const feed = document.getElementById("timelineFeed");
+    const q = query(collection(db, "posts"), where("visibility", "==", "public"), orderBy("createdAt", "desc"), limit(30));
+    const unsub = onSnapshot(q, snap => {
+      feed.innerHTML = snap.docs.map(doc => {
+        const p = doc.data();
+        const isAdmin = currentUser.email === "rambaisaket03@gmail.com";
+        return `<div class="post-card" style="background:white; margin:16px; border-radius:32px; padding:16px;"><img src="${p.photoURL}" width="40" class="user-avatar-sm"><strong>${p.username}</strong><div><img src="${p.imageURL}" style="max-width:100%; border-radius:24px; margin:10px 0;"><p>${p.title}</p></div><div><span class="likeTimeline" data-id="${doc.id}" style="cursor:pointer;">❤️ Like</span> <span class="commentTimeline" style="cursor:pointer;">💬 Comment</span> <span class="shareLink" data-url="${p.imageURL}" style="cursor:pointer;">🔗 Share</span> ${isAdmin ? `<span class="adminDeletePost" data-id="${doc.id}" style="color:red; cursor:pointer;">🗑️ Admin Delete</span>` : ''}</div></div>`;
+      }).join('');
+      document.querySelectorAll(".likeTimeline").forEach(btn => btn.onclick = () => alert("❤️ Liked (no count)"));
+      document.querySelectorAll(".adminDeletePost").forEach(btn => btn.onclick = async () => { if(confirm("Admin delete post?")) await deleteDoc(doc(db, "posts", btn.dataset.id)); });
+      document.querySelectorAll(".shareLink").forEach(btn => { btn.onclick = () => { navigator.clipboard.writeText(btn.dataset.url); alert("Link copied!"); }; });
+    });
+    unsubscribeList.push(unsub);
+  }
+
+  // ========== DISCOVER (users list, chat button) ==========
+  async function renderDiscover(container) {
+    container.innerHTML = `<div><div><button id="recentDiscoverBtn">Recent</button><button id="allDiscoverBtn">All</button></div><div id="discoverList"></div></div>`;
+    const usersSnap = await getDocs(collection(db, "users"));
+    let users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const listDiv = document.getElementById("discoverList");
+    function renderUsers(order = "recent") {
+      let sorted = [...users];
+      if(order === "recent") sorted.reverse();
+      listDiv.innerHTML = sorted.map(u => `<div class="user-list-card"><img src="${u.photoURL}" width="48"><div><strong>${u.username}</strong><p>${u.about || "No about yet"}</p><button class="discoverChatBtn" data-uid="${u.uid}">💬 Chat</button></div></div>`).join('');
+      document.querySelectorAll(".discoverChatBtn").forEach(btn => btn.onclick = () => { currentPage = "messages"; renderPage(); setTimeout(() => document.querySelector("[data-mode='private']")?.click(), 200); });
+    }
+    document.getElementById("recentDiscoverBtn").onclick = () => renderUsers("recent");
+    document.getElementById("allDiscoverBtn").onclick = () => renderUsers("all");
+    renderUsers("recent");
+  }
+
+  // ========== CREATE (upload post, public/private) ==========
+  async function renderCreate(container) {
+    container.innerHTML = `<div style="background:white; border-radius:32px; padding:24px;"><input type="file" id="createImage"><input id="postTitleCreate" placeholder="Title with emojis 😊"><div><label><input type="radio" name="visibility" value="public" checked> Public</label><label><input type="radio" name="visibility" value="private"> Private</label></div><button id="uploadPostBtn">Upload</button></div>`;
+    document.getElementById("uploadPostBtn").onclick = async () => {
+      const file = document.getElementById("createImage").files[0];
+      const title = document.getElementById("postTitleCreate").value;
+      const vis = document.querySelector('input[name="visibility"]:checked').value;
+      if(!file) return;
+      const storageRef = ref(storage, `posts/${currentUser.uid}/${Date.now()}`);
+      await uploadBytesResumable(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await addDoc(collection(db, "posts"), { uid: currentUser.uid, username: currentUser.displayName, photoURL: currentUser.photoURL, imageURL: url, title, visibility: vis, createdAt: serverTimestamp() });
+      alert("Post uploaded!");
+    };
+  }
+
+  // ========== ACCOUNT (profile, about, user posts) ==========
+  async function renderAccount(container) {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    const about = userDoc.data()?.about || "";
+    container.innerHTML = `<div><img src="${currentUser.photoURL}" class="user-avatar-sm" style="width:100px;"><h2>${currentUser.displayName}</h2><textarea id="editAbout" placeholder="About (max 100 chars)">${escapeHtml(about)}</textarea><button id="saveAboutBtn">Save About</button><h3>My Public Posts</h3><div id="myPostsGrid"></div></div>`;
+    document.getElementById("saveAboutBtn").onclick = async () => { await updateDoc(doc(db, "users", currentUser.uid), { about: document.getElementById("editAbout").value.slice(0,100) }); alert("Updated"); };
+    const postsSnap = await getDocs(query(collection(db, "posts"), where("uid", "==", currentUser.uid)));
+    document.getElementById("myPostsGrid").innerHTML = postsSnap.docs.map(d => `<div><img src="${d.data().imageURL}" width="80" style="border-radius:16px;"><p>${d.data().title}</p></div>`).join('');
+  }
+
+  // ========== MY VAULT (private posts only) ==========
+  async function renderMyVault(container) {
+    const postsSnap = await getDocs(query(collection(db, "posts"), where("uid", "==", currentUser.uid), where("visibility", "==", "private")));
+    container.innerHTML = `<div><h3>🔒 Private Vault</h3>${postsSnap.docs.map(d => `<div><img src="${d.data().imageURL}" width="120"><p>${d.data().title}</p></div>`).join('')}</div>`;
+  }
+
+  // ========== SAVED (placeholder for archive) ==========
+  async function renderSaved(container) { container.innerHTML = `<div>📦 Saved posts / messages archive (future: restore & delete permanently).</div>`; }
+
+  // ========== PREFERENCES (theme, username, profile photo) ==========
+  async function renderPreferences(container) {
+    container.innerHTML = `<div><h3>Theme</h3><select id="themeSelect"><option value="default">Default</option><option value="dark">Dark</option></select><h3>Change Username</h3><input id="newUsername" placeholder="New username"><button id="updateUsernameBtn">Update</button><h3>Change Profile Photo</h3><input type="file" id="newPhoto"><button id="updatePhotoBtn">Upload</button></div>`;
+    document.getElementById("themeSelect").onchange = (e) => { if(e.target.value==="dark") document.body.classList.add("dark"); else document.body.classList.remove("dark"); };
+    document.getElementById("updateUsernameBtn").onclick = async () => { const newName = document.getElementById("newUsername").value; if(newName) await updateDoc(doc(db, "users", currentUser.uid), { username: newName }); alert("Username updated!"); };
+    document.getElementById("updatePhotoBtn").onclick = async () => { const file = document.getElementById("newPhoto").files[0]; if(file){ const photoRef = ref(storage, `profile/${currentUser.uid}`); await uploadBytesResumable(photoRef, file); const url = await getDownloadURL(photoRef); await updateDoc(doc(db, "users", currentUser.uid), { photoURL: url }); alert("Photo updated"); } };
+  }
+
+  // Sidebar interactions
+  document.getElementById("menuToggleBtn").onclick = () => document.getElementById("sidebar").classList.toggle("open");
+  document.querySelectorAll(".menu-item").forEach(el => {
+    el.addEventListener("click", () => {
+      if(el.id === "signOutBtn") signOut(auth);
+      else if(el.dataset.page) { currentPage = el.dataset.page; renderPage(); document.getElementById("sidebar").classList.remove("open"); }
+    });
+  });
+
+  // Social apps deep links
+  const socialApps = [
+    { name:"Instagram", img:"https://upload.wikimedia.org/wikipedia/commons/9/95/Instagram_logo_2022.svg", scheme:"instagram://", fallback:"https://instagram.com" },
+    { name:"Facebook", img:"https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg", scheme:"fb://", fallback:"https://facebook.com" },
+    { name:"YouTube", img:"https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg", scheme:"vnd.youtube://", fallback:"https://youtube.com" },
+    { name:"WhatsApp", img:"https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg", scheme:"whatsapp://", fallback:"https://whatsapp.com/download" },
+    { name:"DeepSeek 4.1", img:"https://via.placeholder.com/28?text=DS", scheme:"deepseek://", fallback:"https://deepseek.com", ocean:true }
+  ];
+  const socialRow = document.getElementById("socialAppsRow");
+  socialRow.innerHTML = socialApps.map(app => `<div class="social-app-card" data-scheme="${app.scheme}" data-fallback="${app.fallback}"><img src="${app.img}" onerror="this.src='https://via.placeholder.com/28'"><span>${app.name}</span>${app.ocean ? '<div class="ocean-wave-animation"></div>' : ''}</div>`).join('');
+  document.querySelectorAll(".social-app-card").forEach(card => card.addEventListener("click", () => { window.location.href = card.dataset.scheme; setTimeout(()=> window.open(card.dataset.fallback,"_blank"), 500); }));
+
+  onAuthStateChanged(auth, async (user) => {
+    if(user) {
+      currentUser = user;
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if(!snap.exists()) await setDoc(userRef, { uid: user.uid, email: user.email, username: user.displayName.split(' ')[0], photoURL: user.photoURL, about: "", createdAt: serverTimestamp() });
+      else currentUser = { ...user, ...snap.data() };
+      document.getElementById("userTopInfo").innerHTML = `<img src="${user.photoURL}" class="user-avatar-sm"><span style="margin-left:8px;">${user.email}</span>`;
+      renderPage();
+    } else { currentUser = null; renderPage(); }
+  });
+  setInterval(() => { if(currentUser){ const badge = document.getElementById("msgBadgeSide"); if(badge) badge.style.display = "inline-block"; } }, 10000);
+  lucide.createIcons();
+</script>
+</body>
+  </html>
