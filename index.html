@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Dashboard · DeepSeek 4.1</title>
+  <!-- Google Fonts: Playfair Display + Montserrat (elegant) -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #F8F9FA 0%, #F1F3F5 100%);
+      font-family: 'Montserrat', sans-serif;
+      color: #1e2a3a;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    /* main dashboard container */
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+      overflow: hidden;
+      border: 1px solid rgba(0,195,255,0.2);
+    }
+
+    /* header with moon + user area */
+    .dashboard-header {
+      padding: 1.2rem 2rem;
+      background: rgba(255,255,255,0.85);
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo-moon {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #f1f5f9;
+      padding: 0.3rem 1rem 0.3rem 0.8rem;
+      border-radius: 60px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .logo-preview {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #0f766e, #22c55e);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+
+    .logo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-weight: 600;
+      font-size: 1.2rem;
+      background: linear-gradient(120deg, #0f766e, #22d3ee);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .upload-logo-btn {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 30px;
+      padding: 5px 12px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .upload-logo-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* moon animation */
+    .moon-icon {
+      font-size: 2rem;
+      color: #fbbf24;
+      filter: drop-shadow(0 0 4px #fde047);
+      animation: moonPulse 2.5s infinite ease, moonFloat 4s infinite;
+    }
+
+    @keyframes moonPulse {
+      0% { text-shadow: 0 0 0px #ffd966; }
+      50% { text-shadow: 0 0 12px #ffb347; }
+      100% { text-shadow: 0 0 0px #ffd966; }
+    }
+    @keyframes moonFloat {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+      100% { transform: translateY(0px); }
+    }
+
+    /* user profile */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: #ffffffcc;
+      padding: 0.3rem 1rem 0.3rem 0.5rem;
+      border-radius: 60px;
+      backdrop-filter: blur(4px);
+      border: 1px solid #cbd5e1;
+    }
+    .user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .user-info {
+      text-align: right;
+    }
+    .user-email {
+      font-size: 0.7rem;
+      color: #334155;
+    }
+    .user-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* main content */
+    .dashboard-main {
+      padding: 2rem;
+    }
+
+    /* AI response card */
+    .ai-card {
+      background: #FFFFFF;
+      border-radius: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      padding: 1.8rem;
+      margin-bottom: 2rem;
+      border: 1px solid #eef2ff;
+    }
+    .ai-header {
+      font-size: 1.6rem;
+      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+      background: linear-gradient(135deg, #0f766e, #38bdf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+    .chat-window {
+      background: #F8FAFE;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      max-height: 360px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      border: 1px solid #e2e8f0;
+    }
+    .message {
+      margin-bottom: 1rem;
+      display: flex;
+    }
+    .message.user {
+      justify-content: flex-end;
+    }
+    .bubble {
+      max-width: 80%;
+      padding: 0.8rem 1.2rem;
+      border-radius: 1.8rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .message.user .bubble {
+      background: #56A0D3;
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+    .message.ai .bubble {
+      background: #007BA7;
+      color: white;
+      border-bottom-left-radius: 5px;
+    }
+    .input-group {
+      display: flex;
+      gap: 12px;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 60px;
+      border: 1px solid #cbd5e1;
+      font-family: inherit;
+      outline: none;
+    }
+    .input-group button {
+      background: #00C3FF;
+      border: none;
+      width: 48px;
+      border-radius: 60px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .input-group button:hover {
+      background: #0f766e;
+    }
+
+    /* starting points collapsible */
+    .starting-points {
+      margin: 2rem 0;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1.5rem;
+    }
+    .collapse-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 0.7rem 1rem;
+      border-radius: 2rem;
+    }
+    .collapse-content {
+      margin-top: 1rem;
+      display: none;
+    }
+    .collapse-content.show {
+      display: block;
+    }
+    .pill-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+    .pill {
+      background: #eef2ff;
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .pill.active {
+      background: #00C3FF;
+      color: white;
+    }
+
+    /* news section */
+    .news-section {
+      margin-top: 1rem;
+    }
+    .lang-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .lang-btn {
+      background: #eef2ff;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+    .lang-btn.active {
+      background: #007BA7;
+      color: white;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .news-card {
+      background: white;
+      border-radius: 1.2rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .news-svg {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(145deg, #cbd5e1, #e2e8f0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-svg svg {
+      width: 100px;
+      height: 100px;
+    }
+    .news-text {
+      padding: 1rem;
+    }
+    .news-title {
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .news-desc {
+      font-size: 0.8rem;
+      color: #334155;
+    }
+
+    /* case gallery */
+    .case-gallery {
+      margin: 2rem 0;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    .case-card {
+      background: white;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      text-align: center;
+    }
+    .case-card img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+    }
+    .case-caption {
+      font-size: 0.7rem;
+      padding: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .remove-case {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+    }
+
+    .upload-case-btn {
+      background: #0f766e;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: white;
+      font-weight: 500;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+
+    hr {
+      margin: 1.5rem 0;
+      border-color: #e2e8f0;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 1rem;
+      color: #64748b;
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 1rem; }
+      .dashboard-header { flex-direction: column; align-items: stretch; }
+      .user-profile { justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="logo-moon">
+      <div class="logo-area">
+        <div id="logoPreview" class="logo-preview">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <span class="logo-text">DeepSeek 4.1</span>
+        <button id="uploadLogoTrigger" class="upload-logo-btn"><i class="fas fa-upload"></i> Logo</button>
+        <input type="file" id="logoUploadInput" accept="image/*" style="display: none;">
+      </div>
+      <div class="moon-icon">
+        <i class="fas fa-moon"></i>
+      </div>
+    </div>
+    <div class="user-profile">
+      <div class="user-avatar">
+        <img src="https://ui-avatars.com/api/?background=0f766e&color=fff&bold=true&size=44&name=S" alt="avatar">
+      </div>
+      <div class="user-info">
+        <div class="user-name">Shivanand Saket</div>
+        <div class="user-email">shivanandsaket738@gmail.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-main">
+    <!-- AI CHAT CARD -->
+    <div class="ai-card">
+      <div class="ai-header">
+        🌊 How can I help you today?
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <div class="message ai">
+          <div class="bubble">
+            Namaste! Main aapka dashboard assistant hoon. Puchhiye kuch bhi, main automatically jawab dunga. Har response ke end mein <strong>@suthariya_sahil</strong> hoga. 😊
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <input type="text" id="chatInput" placeholder="Describe what you want to create or ask anything...">
+        <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- STARTING POINTS (COLLAPSIBLE) -->
+    <div class="starting-points">
+      <div class="collapse-header" id="toggleStartingPoints">
+        <span>▲ STARTING POINTS</span>
+        <i class="fas fa-chevron-up" id="arrowIcon"></i>
+      </div>
+      <div class="collapse-content show" id="startingPointsContent">
+        <!-- All pills -->
+        <div class="pill-container" id="allPills">
+          <div class="pill active" data-section="all">All</div>
+          <div class="pill" data-section="news">News</div>
+          <div class="pill" data-section="case">Case Studies</div>
+          <div class="pill" data-section="harassment">Harassment Awareness</div>
+          <div class="pill" data-section="ai">Artificial Intelligence</div>
+          <div class="pill" data-section="love">Love & Relationships</div>
+        </div>
+
+        <!-- News section with language toggle -->
+        <div id="newsSection" class="news-section" style="display: block;">
+          <div class="lang-bar">
+            <button class="lang-btn active" data-lang="en">English</button>
+            <button class="lang-btn" data-lang="hi">हिंदी</button>
+            <button class="lang-btn" data-lang="gu">ગુજરાતી</button>
+            <button class="lang-btn" data-lang="hing">Hinglish</button>
+          </div>
+          <div class="news-grid" id="newsGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASE GALLERY (Harassment / Evidence) -->
+    <div class="case-gallery">
+      <h3 style="font-weight: 600; margin-bottom: 0.5rem;">📁 Case Evidence · Harassment & Reports</h3>
+      <div id="caseGalleryGrid" class="gallery-grid">
+        <!-- sample cases with SVG illustrations -->
+        <div class="case-card" data-id="sample1">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2340c4ff'/%3E%3Ctext x='50' y='55' fill='white' font-size='12' text-anchor='middle'%3ECase 1%3C/text%3E%3C/svg%3E" alt="case">
+          <div class="case-caption">Harassment report #1 <button class="remove-case"><i class="fas fa-trash"></i></button></div>
+        </div>
+        <div class="case-card" data-id="sample2">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2340c4ff'/%3E%3Ctext x='50' y='55' fill='white' font-size='12' text-anchor='middle'%3EEvidence%3C/text%3E%3C/svg%3E" alt="case">
+          <div class="case-caption">Screenshot evidence <button class="remove-case"><i class="fas fa-trash"></i></button></div>
+        </div>
+      </div>
+      <button id="uploadCaseButton" class="upload-case-btn"><i class="fas fa-plus"></i> Upload case picture</button>
+      <input type="file" id="caseFileInput" accept="image/*" multiple style="display: none;">
+    </div>
+    <hr>
+    <footer>⚡ Dashboard only — full app coming soon. Every message gets automated response.</footer>
+  </div>
+</div>
+
+<script>
+  // -------------------- AI AUTO-RESPONSE LOGIC --------------------
+  const chatWindow = document.getElementById('chatWindow');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendChatBtn');
+
+  function addMessage(text, type) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${type}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = text;
+    msgDiv.appendChild(bubble);
+    chatWindow.appendChild(msgDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function detectLanguage(msg) {
+    if (/[\u0900-\u097F]/.test(msg)) return 'hi';
+    if (/[\u0A80-\u0AFF]/.test(msg)) return 'gu';
+    return 'en';
+  }
+
+  function generateAutoResponse(userMsg) {
+    const lower = userMsg.toLowerCase();
+    let reply = "";
+
+    // owner / malik / boss queries
+    if (lower.includes("owner") || lower.includes("malik") || lower.includes("boss") || lower.includes("tumhara") || lower.includes("creator") || lower.includes("kisne banaya")) {
+      reply = "Mujhe Sahil ne banaya hai. Unse milna ho toh: <a href='https://wa.me/9313195257' target='_blank' style='color:#fff; text-decoration:underline'>wa.me/9313195257</a> · Instagram: @suthariya_sahil · Facebook: DySahil · YouTube: @dysahil.1";
+    }
+    // who are you
+    else if (lower.includes("tum kaun ho") || lower.includes("who are you") || lower.includes("aap kya ho")) {
+      reply = "Main DeepSeek 4.1 dashboard assistant hoon. Yeh ek social media platform hai jahan aap posts, messages aur cases manage kar sakte ho. Abhi sirf dashboard active hai, baaki features jald aa rahe hain.";
+    }
+    // help / capabilities
+    else if (lower.includes("help") || lower.includes("kya kar sakte ho") || lower.includes("help chahiye") || lower.includes("what can you do")) {
+      reply = "Main tumhe dashboard features bata sakta hoon, case images upload karne mein madad, news dikha sakta hoon, aur har sawaal ka jawab dunga. Agar image banana ho toh ChatGPT pe bhej dunga, aur kuch mushkil sawaal ho toh DeepSeek AI se puchho. Aur ha, har response ke end mein @suthariya_sahil hoga 😊";
+    }
+    // image create
+    else if (lower.includes("image banao") || lower.includes("image create") || lower.includes("generate image") || lower.includes("photo banao") || lower.includes("picture create")) {
+      reply = "Image create karne ke liye ChatGPT use karo! <a href='https://chatgpt.com' target='_blank' style='color:#fff; text-decoration:underline'>ChatGPT Open</a> (agar app installed hai toh app khulega, warna website).";
+    }
+    // gibberish detection (no real words)
+    else if (/^[^a-zA-Z\u0900-\u097F\u0A80-\u0AFF\s]*$/.test(userMsg.replace(/\s/g,'')) || (userMsg.length > 0 && !/[a-zA-Z\u0900-\u097F]/.test(userMsg))) {
+      reply = "Aap kya kehna chahte the? Please dobara likhein 😊 / What did you mean? Please retype your message.";
+    }
+    // educational / deep research
+    else if (lower.includes("educational") || lower.includes("deep") || lower.includes("research")) {
+      reply = "Iske liye DeepSeek AI se puchho → <a href='https://deepseek.com' target='_blank' style='color:#fff; text-decoration:underline'>DeepSeek.com</a>";
+    }
+    else {
+      reply = "Yeh mere scope se bahar hai. DeepSeek pe puchho → <a href='https://deepseek.com' target='_blank' style='color:#fff; text-decoration:underline'>deepseek.com</a>";
+    }
+
+    // Always append @suthariya_sahil with cerulean style
+    reply += `<br><span style="color:#00C3FF;">— @suthariya_sahil</span>`;
+    return reply;
+  }
+
+  function handleUserMessage() {
+    let msg = chatInput.value.trim();
+    if (msg === "") return;
+    addMessage(msg, "user");
+    chatInput.value = "";
+
+    // typing indicator simulation
+    const typingDiv = document.createElement('div');
+    typingDiv.className = "message ai";
+    typingDiv.innerHTML = `<div class="bubble"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
+    chatWindow.appendChild(typingDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    setTimeout(() => {
+      chatWindow.removeChild(typingDiv);
+      const autoReply = generateAutoResponse(msg);
+      addMessage(autoReply, "ai");
+    }, 600);
+  }
+
+  sendBtn.addEventListener('click', handleUserMessage);
+  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleUserMessage(); });
+
+  // ---------- LOGO UPLOAD ----------
+  const logoTrigger = document.getElementById('uploadLogoTrigger');
+  const logoInput = document.getElementById('logoUploadInput');
+  const logoPreview = document.getElementById('logoPreview');
+
+  logoTrigger.addEventListener('click', () => logoInput.click());
+  logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        logoPreview.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ---------- CASE GALLERY (upload, remove) ----------
+  const caseGrid = document.getElementById('caseGalleryGrid');
+  const uploadCaseBtn = document.getElementById('uploadCaseButton');
+  const caseFileInput = document.getElementById('caseFileInput');
+
+  function addCaseImage(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imgData = e.target.result;
+      const uniqueId = 'case_' + Date.now() + Math.random().toString(36).substr(2, 5);
+      const card = document.createElement('div');
+      card.className = 'case-card';
+      card.setAttribute('data-id', uniqueId);
+      card.innerHTML = `
+        <img src="${imgData}" alt="case evidence">
+        <div class="case-caption">
+          📌 Harassment/Incident case 
+          <button class="remove-case"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      `;
+      caseGrid.appendChild(card);
+      const removeBtn = card.querySelector('.remove-case');
+      removeBtn.addEventListener('click', () => card.remove());
+    };
+    reader.readAsDataURL(file);
+  }
+
+  uploadCaseBtn.addEventListener('click', () => caseFileInput.click());
+  caseFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+      for (let file of e.target.files) {
+        if (file.type.startsWith('image/')) addCaseImage(file);
+      }
+    }
+    caseFileInput.value = '';
+  });
+
+  // attach remove to existing sample cards
+  document.querySelectorAll('.remove-case').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.target.closest('.case-card').remove();
+    });
+  });
+
+  // ---------- STARTING POINTS COLLAPSE + NEWS ----------
+  const toggleBtn = document.getElementById('toggleStartingPoints');
+  const contentDiv = document.getElementById('startingPointsContent');
+  const arrowIcon = document.getElementById('arrowIcon');
+
+  toggleBtn.addEventListener('click', () => {
+    contentDiv.classList.toggle('show');
+    if (contentDiv.classList.contains('show')) {
+      arrowIcon.className = 'fas fa-chevron-up';
+    } else {
+      arrowIcon.className = 'fas fa-chevron-down';
+    }
+  });
+
+  // ---------- NEWS DATA (SVG + realistic content) ----------
+  const newsData = {
+    en: [
+      { title: "Global AI Summit 2025", desc: "Leaders discuss ethical AI and harassment prevention tools.", svg: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+      { title: "New Harassment Case Laws", desc: "Strict regulations passed to protect digital spaces.", svg: "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" },
+      { title: "AI Love Calculator Trend", desc: "Romantic AI tools gaining popularity among youth.", svg: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" },
+      { title: "Cyber Safety Drive", desc: "Government launches awareness for harassment victims.", svg: "M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2z" }
+    ],
+    hi: [
+      { title: "वैश्विक AI शिखर सम्मेलन", desc: "नेताओं ने AI और उत्पीड़न रोकथाम पर चर्चा की।", svg: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+      { title: "नए उत्पीड़न कानून", desc: "डिजिटल स्थानों की सुरक्षा के लिए सख्त नियम।", svg: "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" },
+      { title: "AI लव कैलकुलेटर ट्रेंड", desc: "युवाओं में रोमांटिक AI टूल्स की लोकप्रियता।", svg: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" },
+      { title: "साइबर सुरक्षा अभियान", desc: "सरकार ने उत्पीड़न पीड़ितों के लिए जागरूकता शुरू की।", svg: "M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2z" }
+    ],
+    gu: [
+      { title: "વૈશ્વિક AI શિખર સંમેલન", desc: "નેતાઓએ AI અને ત્રાસ નિવારણ પર ચર્ચા કરી.", svg: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+      { title: "નવા ત્રાસ કાયદા", desc: "ડિજિટલ જગ્યાઓનું રક્ષણ કરવા માટે કડક નિયમો.", svg: "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" }
+    ],
+    hing: [
+      { title: "Global AI Summit", desc: "Leaders ne ethical AI aur harassment rokne pe baat ki.", svg: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+      { title: "Naye Harassment Laws", desc: "Digital spaces ke liye strict rules aaye.", svg: "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" }
+    ]
+  };
+
+  let currentLang = 'en';
+
+  function renderNews(lang) {
+    const grid = document.getElementById('newsGrid');
+    const articles = newsData[lang] || newsData.en;
+    grid.innerHTML = '';
+    articles.forEach(art => {
+      const card = document.createElement('div');
+      card.className = 'news-card';
+      card.innerHTML = `
+        <div class="news-svg">
+          <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.5">
+            <path d="${art.svg}" stroke="currentColor" fill="none"/>
+            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none"/>
+          </svg>
+        </div>
+        <div class="news-text">
+          <div class="news-title">${art.title}</div>
+          <div class="news-desc">${art.desc}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLang = btn.getAttribute('data-lang');
+      renderNews(currentLang);
+    });
+  });
+
+  renderNews('en');
+
+  // Pills filter for news (just demo visual)
+  const pills = document.querySelectorAll('.pill');
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const section = pill.getAttribute('data-section');
+      if (section === 'news') {
+        document.getElementById('newsSection').style.display = 'block';
+      } else {
+        document.getElementById('newsSection').style.display = 'block';
+        // just keep same news for demo
+      }
+    });
+  });
+
+  // Keep news visible always for simplicity
+</script>
+</body>
+          </html>
