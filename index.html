@@ -1,421 +1,2229 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="default">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deepseek 4.1</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/lucide@latest/dist/umd/lucide.js">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            background: linear-gradient(to right, #0f766e, #22c55e, #2dd4bf, #22d3ee, #38bdf8, #60a5fa, #818cf8, #c4b5fd);
-        }
-        #sidebar {
-            position: fixed;
-            left: -280px;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            transition: left 0.3s ease;
-            z-index: 1000;
-            padding: 2rem 1rem;
-        }
-        #sidebar.open {
-            left: 0;
-        }
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .logo h1 {
-            color: #00C3FF;
-            font-size: 2rem;
-            font-weight: 700;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        @keyframes glow {
-            from { text-shadow: 0 0 10px #00C3FF; }
-            to { text-shadow: 0 0 20px #56A0D3, 0 0 30px #74ACDF; }
-        }
-        .social-bar {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background: rgba(86, 160, 211, 0.2);
-            border-radius: 12px;
-        }
-        .social-item {
-            flex: 1;
-            text-align: center;
-            padding: 0.8rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: white;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        .social-item:hover {
-            transform: scale(1.05);
-            background: rgba(255,255,255,0.2);
-        }
-        .divider {
-            height: 1px;
-            background: rgba(255,255,255,0.3);
-            margin: 1.5rem 0;
-        }
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            color: white;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            margin-bottom: 0.5rem;
-        }
-        .menu-item:hover, .menu-item.active {
-            background: rgba(0, 195, 255, 0.3);
-            transform: translateX(5px);
-        }
-        .menu-item i {
-            width: 20px;
-        }
-        #main-content {
-            margin-left: 0;
-            transition: margin-left 0.3s ease;
-            height: 100vh;
-            overflow-y: auto;
-            background: #F8F9FA;
-            padding: 1rem;
-        }
-        #sidebar.open + #main-content {
-            margin-left: 280px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: #F1F3F5;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .menu-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #007BA7;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #00C3FF, #56A0D3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-        .dashboard-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .ai-input-container {
-            background: white;
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        .ai-title {
-            color: #007BA7;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        .ai-input {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            border: 2px solid #E9ECEF;
-            border-radius: 15px;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-        }
-        .ai-input:focus {
-            outline: none;
-            border-color: #00C3FF;
-            box-shadow: 0 0 0 3px rgba(0,195,255,0.1);
-        }
-        .send-btn {
-            background: linear-gradient(45deg, #00C3FF, #56A0D3);
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 500;
-            margin-top: 1rem;
-            transition: all 0.3s ease;
-        }
-        .send-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,195,255,0.4);
-        }
-        .response-container {
-            margin-top: 2rem;
-        }
-        .message-bubble {
-            padding: 1.5rem 1.5rem;
-            border-radius: 20px;
-            margin-bottom: 1rem;
-            animation: slideUp 0.4s ease;
-            max-width: 80%;
-        }
-        .user-message {
-            background: #56A0D3;
-            color: white;
-            margin-left: auto;
-        }
-        .ai-message {
-            background: linear-gradient(135deg, #007BA7, #74ACDF);
-            color: white;
-        }
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .starting-points {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-        }
-        .starting-toggle {
-            cursor: pointer;
-            font-weight: 600;
-            color: #007BA7;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .starting-content {
-            display: none;
-        }
-        .starting-content.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .pill {
-            background: #E9ECEF;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-        }
-        .pill:hover {
-            background: #00C3FF;
-            color: white;
-            transform: translateY(-2px);
-        }
-        .news-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #E9ECEF;
-        }
-        .news-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .news-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        }
-        .lang-selector {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .lang-btn {
-            padding: 0.3rem 0.8rem;
-            border: 1px solid #DEE2E6;
-            background: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        .lang-btn.active {
-            background: #00C3FF;
-            color: white;
-            border-color: #00C3FF;
-        }
-        .screenshot-block {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(135, 206, 235, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            flex-direction: column;
-            color: white;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-        .screenshot-block.show {
-            display: flex;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .section {
-            display: none;
-        }
-        .section.active {
-            display: block;
-        }
-        @media (max-width: 768px) {
-            #sidebar {
-                width: 100%;
-                left: -100%;
-            }
-            #sidebar.open + #main-content {
-                margin-left: 0;
-            }
-        }
-        .sea-waves {
-            height: 60px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-        .wave {
-            position: absolute;
-            bottom: 0;
-            width: 200%;
-            height: 60px;
-            background: linear-gradient(45deg, rgba(0,195,255,0.6), rgba(86,160,211,0.4));
-            animation: wave 10s linear infinite;
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-        }
-        .wave:nth-child(2) {
-            animation: wave 10s linear infinite -2s;
-            background: linear-gradient(45deg, rgba(116,172,223,0.5), rgba(0,123,167,0.3));
-        }
-        @keyframes wave {
-            0% { transform: translateX(-50%) translateZ(0) scaleY(1); }
-            50% { transform: translateX(-25%) translateZ(0) scaleY(0.55); }
-            100% { transform: translateX(0%) translateZ(0) scaleY(1); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Deepseek 4.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<style>
+/* ===== ROOT ===== */
+:root{
+  --g1:#0f766e;--g2:#22c55e;--g3:#2dd4bf;--g4:#22d3ee;
+  --g5:#38bdf8;--g6:#60a5fa;--g7:#818cf8;--g8:#c4b5fd;
+  --cer:#007BA7;--car:#56A0D3;--msg:#74ACDF;
+  --gw:#F8F8FF;--ow:#FAF9F6;--wd:#F3F3F0;--wc:#FFFDD0;
+  --bs:#87CEEB;--per:#CCCCFF;
+  --t1:#1a1a2e;--t2:#4a5568;--tl:#9090b0;
+  --bdr:rgba(0,0,0,.07);--shd:0 4px 24px rgba(0,0,0,.08);
+  --fh:'Josefin Sans',sans-serif;--fb:'Nunito',sans-serif;
+  --bg-page:var(--gw);
+}
+[data-theme="dark"]{
+  --gw:#1a1a2e;--ow:#16162a;--wd:#1e1e30;--wc:#181828;
+  --t1:#e0e0f0;--t2:#a0a0c8;--tl:#6060a0;
+  --bdr:rgba(255,255,255,.08);--shd:0 4px 24px rgba(0,0,0,.4);
+  --bg-page:#1a1a2e;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--fb);color:var(--t1);overflow:hidden;-webkit-font-smoothing:antialiased;background:var(--bg-page)}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:var(--fb);outline:none}
+input,textarea{font-family:var(--fb);outline:none}
+img{max-width:100%;display:block}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(0,123,167,.3);border-radius:99px}
+::selection{background:var(--cer);color:#fff}
+
+/* ===== KEYFRAMES ===== */
+@keyframes gradFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes heartPop{0%{transform:scale(0)}60%{transform:scale(1.5)}100%{transform:scale(1)}}
+@keyframes waveAnim{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes moonGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,195,255,.7));transform:scale(1)}50%{filter:drop-shadow(0 0 22px rgba(0,195,255,1));transform:scale(1.07)}}
+@keyframes colorCycle{0%{filter:hue-rotate(0deg) drop-shadow(0 0 12px rgba(0,195,255,.5))}100%{filter:hue-rotate(360deg) drop-shadow(0 0 12px rgba(0,195,255,.5))}}
+@keyframes marqScroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+@keyframes igPulse{0%,100%{box-shadow:0 0 0 rgba(240,148,51,0)}50%{box-shadow:0 0 10px rgba(240,148,51,.45)}}
+@keyframes ytBreathe{0%,100%{opacity:1}50%{opacity:.8}}
+@keyframes sbGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,255,255,.5))}50%{filter:drop-shadow(0 0 20px rgba(255,255,255,1))}}
+@keyframes spinLoad{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+/* ===== LOGIN ===== */
+#login-page{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;
+  background:linear-gradient(135deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5),var(--g6),var(--g7),var(--g8));
+  background-size:400% 400%;animation:gradFlow 10s ease infinite;
+}
+.lc{
+  background:rgba(255,255,255,.12);backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,.25);border-radius:30px;
+  padding:48px 36px;text-align:center;width:90%;max-width:380px;
+  box-shadow:0 28px 70px rgba(0,0,0,.22);
+}
+.lc-logo{width:78px;height:78px;margin:0 auto 16px;display:block;animation:moonGlow 3s ease-in-out infinite}
+.lc-title{font-family:var(--fh);font-size:28px;font-weight:700;color:#fff;letter-spacing:3px;margin-bottom:5px}
+.lc-sub{color:rgba(255,255,255,.75);font-size:13px;margin-bottom:28px;line-height:1.6}
+.g-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+  padding:14px 20px;background:#fff;border:none;border-radius:50px;
+  font-size:14px;font-weight:700;color:#333;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);transition:all .25s;
+}
+.g-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.g-btn:active{transform:scale(.98)}
+
+/* ===== APP SHELL ===== */
+#app{display:none;height:100vh;position:relative;overflow:hidden;flex-direction:column}
+#app.ready{display:flex}
+
+/* ===== SIDEBAR OVERLAY ===== */
+#sb-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:100;backdrop-filter:blur(3px);
+}
+#sb-overlay.show{display:block}
+
+/* ===== SIDEBAR ===== */
+#sidebar{
+  position:fixed;left:-290px;top:0;bottom:0;width:285px;
+  background:linear-gradient(180deg,var(--cer) 0%,var(--car) 100%);
+  z-index:101;display:flex;flex-direction:column;
+  transition:left .32s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+#sidebar.open{left:0}
+.sb-inner{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.sb-inner::-webkit-scrollbar{width:2px}
+.sb-top{display:flex;flex-direction:column;align-items:center;padding:26px 16px 10px}
+.sb-logo{width:56px;height:56px;animation:sbGlow 2.5s ease-in-out infinite}
+.sb-appname{font-family:var(--fh);font-size:13px;font-weight:700;color:#fff;letter-spacing:2.5px;margin-top:7px}
+/* marquee */
+.sb-marq{overflow:hidden;white-space:nowrap;padding:7px 0;border-top:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.18);margin:8px 0}
+.sb-marq-txt{display:inline-block;color:rgba(255,255,255,.7);font-size:9.5px;letter-spacing:.5px;animation:marqScroll 20s linear infinite;padding-left:12px}
+/* nav */
+.sb-nav{padding:4px 0;flex:1}
+.sn-item{
+  display:flex;align-items:center;gap:13px;padding:12px 18px;
+  color:rgba(255,255,255,.88);transition:all .2s;
+  font-size:13.5px;font-weight:600;border-left:3px solid transparent;
+  cursor:pointer;position:relative;user-select:none;
+}
+.sn-item:hover,.sn-item.active{background:rgba(255,255,255,.15);border-left-color:#fff;color:#fff}
+.sn-item svg{width:18px;height:18px;flex-shrink:0}
+.sn-item.logout{color:#ffb3b3}
+.sn-item.logout:hover{background:rgba(255,100,100,.15);border-left-color:#ffb3b3}
+.sn-badge{
+  display:none;position:absolute;top:9px;right:12px;
+  background:#ef4444;color:#fff;font-size:9px;font-weight:800;
+  min-width:17px;height:17px;border-radius:50%;
+  align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.5);
+}
+.sn-badge.show{display:flex}
+/* divider */
+.sb-div{height:1px;background:rgba(255,255,255,.18);margin:6px 14px}
+/* social section */
+.sb-social{padding:10px 12px 14px}
+.sb-soc-title{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:9px;padding-left:2px}
+.sb-soc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.sa-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:9px 4px 6px;border-radius:13px;
+  background:rgba(255,255,255,.1);transition:all .22s;
+  cursor:pointer;position:relative;overflow:hidden;min-height:62px;
+}
+.sa-item:hover{background:rgba(255,255,255,.22);transform:scale(1.04)}
+.sa-item:active{transform:scale(.97)}
+.sa-name{font-size:8px;color:rgba(255,255,255,.9);font-weight:800;text-align:center;line-height:1.2;z-index:2;position:relative}
+.sa-item.ig{animation:igPulse 3.5s ease-in-out infinite}
+.sa-item.yt{animation:ytBreathe 3s ease-in-out infinite}
+/* DeepSeek ocean */
+.ds-ocean-wrap{position:absolute;bottom:0;left:0;right:0;height:18px;overflow:hidden;pointer-events:none}
+.ds-wave{position:absolute;bottom:0;left:0;width:200%;height:100%;animation:waveAnim 2.8s linear infinite}
+.ds-wave2{animation-delay:-1.4s;opacity:.55}
+
+/* ===== TOP HEADER ===== */
+#top-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;background:var(--gw);
+  border-bottom:1px solid var(--bdr);
+  flex-shrink:0;z-index:50;box-shadow:0 2px 14px rgba(0,0,0,.05);
+  position:sticky;top:0;
+}
+.hdr-l{display:flex;align-items:center;gap:11px}
+.menu-btn{background:none;border:none;padding:7px;border-radius:10px;color:var(--t1);transition:background .2s}
+.menu-btn:hover{background:rgba(0,0,0,.06)}
+.hdr-pg-title{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--cer);letter-spacing:.8px}
+.hdr-r{display:flex;align-items:center;gap:9px}
+.hdr-u-ava{
+  width:33px;height:33px;border-radius:50%;object-fit:cover;
+  border:2px solid var(--cer);box-shadow:0 0 0 3px rgba(0,123,167,.15);cursor:pointer;
+}
+.notif-wrap{position:relative;cursor:pointer;padding:5px}
+.notif-badge{
+  display:none;position:absolute;top:2px;right:2px;
+  background:#ef4444;color:#fff;font-size:8px;font-weight:800;
+  min-width:14px;height:14px;border-radius:50%;
+  align-items:center;justify-content:center;border:1.5px solid var(--gw);
+}
+.notif-badge.show{display:flex}
+
+/* ===== MAIN CONTENT ===== */
+#main-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative}
+.page{display:none;min-height:100%}
+.page.active{display:block}
+
+/* ===== DASHBOARD ===== */
+#pg-dash{background:linear-gradient(180deg,var(--gw),var(--ow))}
+.dash-ubar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:rgba(0,123,167,.05);border-bottom:1px solid var(--bdr);
+}
+.dash-uava{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--cer);object-fit:cover;flex-shrink:0}
+.dash-ugmail{font-size:10.5px;color:var(--t2)}
+.dash-uname{font-size:13.5px;font-weight:800;color:var(--cer)}
+.dash-hero{padding:20px 16px 8px;text-align:center}
+.dash-clogo{width:52px;height:52px;display:inline-block;animation:colorCycle 4s linear infinite}
+.dash-htitle{font-family:var(--fh);font-size:20px;font-weight:700;color:var(--cer);letter-spacing:.4px;margin-top:10px}
+/* AI response box */
+.ai-box{margin:10px 16px 12px;background:#fff;border-radius:20px;box-shadow:var(--shd);border:1px solid rgba(0,123,167,.07);overflow:hidden}
+[data-theme="dark"] .ai-box{background:#1e1e30}
+.ai-title{padding:12px 16px 8px;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--t2);border-bottom:1px solid var(--bdr)}
+.ai-msgs{min-height:80px;max-height:220px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ai-bubble{padding:9px 13px;border-radius:16px;max-width:90%;font-size:13px;line-height:1.55;word-break:break-word;animation:bubbleIn .3s ease}
+.ai-bubble.user{background:var(--car);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.ai-bubble.bot{background:var(--cer);color:#fff;align-self:flex-start;border-bottom-left-radius:4px}
+.ai-bubble.bot a{color:var(--bs);font-weight:700;text-decoration:underline}
+.ai-mention{color:var(--bs);font-weight:800}
+.ai-inp-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--bdr)}
+.ai-inp{flex:1;padding:9px 14px;border:1.5px solid rgba(0,123,167,.18);border-radius:50px;font-size:13px;background:var(--gw);color:var(--t1);transition:border .2s}
+.ai-inp:focus{border-color:var(--cer)}
+.ai-send{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cer),var(--car));border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.ai-send:hover{transform:scale(1.08)}
+/* Starting Points */
+.sp-wrap{margin:0 16px 16px}
+.sp-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:#fff;border-radius:12px 12px 0 0;
+  border:1px solid var(--bdr);cursor:pointer;user-select:none;
+  font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--t1);
+}
+[data-theme="dark"] .sp-hdr,[data-theme="dark"] .sp-body{background:#1e1e30}
+.sp-arr{transition:transform .3s;font-size:12px}
+.sp-arr.up{transform:rotate(180deg)}
+.sp-body{background:#fff;border:1px solid var(--bdr);border-top:none;border-radius:0 0 12px 12px;padding:13px;display:none}
+.sp-body.open{display:block}
+.sp-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.sp-pill{padding:5px 12px;background:linear-gradient(135deg,var(--cer),var(--car));color:#fff;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .2s;border:none}
+.sp-pill:hover{opacity:.82}
+/* News */
+.news-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.news-lbl{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--t1)}
+.lang-row{display:flex;gap:4px}
+.lang-b{padding:3px 8px;border-radius:12px;border:1px solid var(--cer);background:none;color:var(--cer);font-size:9px;font-weight:700;cursor:pointer;transition:all .2s}
+.lang-b.active{background:var(--cer);color:#fff}
+.nc-cats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.nc-cat-b{padding:4px 10px;border-radius:16px;border:1.5px solid rgba(0,123,167,.28);background:none;color:var(--cer);font-size:10px;font-weight:700;cursor:pointer;transition:all .2s}
+.nc-cat-b.active{background:var(--cer);color:#fff;border-color:var(--cer)}
+.nc-list{display:flex;flex-direction:column;gap:10px}
+.nc{border-radius:13px;overflow:hidden;background:var(--gw);border:1px solid var(--bdr);cursor:pointer;transition:transform .2s}
+.nc:hover{transform:translateY(-2px)}
+.nc svg{width:100%;height:90px;display:block}
+.nc-body{padding:10px 12px 12px}
+.nc-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--cer);margin-bottom:3px}
+.nc-title{font-size:13px;font-weight:700;color:var(--t1);line-height:1.4;margin-bottom:3px}
+.nc-sum{font-size:11px;color:var(--t2);line-height:1.5}
+
+/* ===== MESSAGES ===== */
+#pg-msg{background:var(--gw)}
+.msg-mode-row{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--gw);position:sticky;top:0;z-index:10}
+.mm-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--cer);background:none;color:var(--cer);font-size:13px;font-weight:700;transition:all .2s}
+.mm-btn.active{background:var(--cer);color:#fff}
+/* Public chat */
+#pub-section{display:block}
+#priv-section{display:none}
+.pub-msgs{
+  height:calc(100vh - 175px);overflow-y:auto;padding:12px;
+  display:flex;flex-direction:column;gap:10px;
+  background:var(--msg);
+}
+.pm-item{display:flex;gap:8px;align-items:flex-start;animation:bubbleIn .3s ease}
+.pm-ava{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.55)}
+.pm-body{flex:1}
+.pm-hdr{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.pm-name{font-size:12px;font-weight:800;color:#fff}
+.pm-time{font-size:9.5px;color:rgba(255,255,255,.65)}
+.pm-bub{
+  background:rgba(255,255,255,.18);backdrop-filter:blur(4px);color:#fff;
+  padding:8px 12px;border-radius:0 12px 12px 12px;font-size:13px;
+  line-height:1.45;word-break:break-word;position:relative;cursor:pointer;
+  transition:background .2s;user-select:none;-webkit-user-select:none;
+}
+.pm-bub:hover{background:rgba(255,255,255,.26)}
+.pm-bub.liked::after{content:'❤️';position:absolute;bottom:-9px;right:8px;font-size:14px;animation:heartPop .35s ease}
+.pm-act-row{display:flex;gap:10px;padding-top:3px}
+.pm-act{background:none;border:none;color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;padding:2px 5px;transition:color .2s;display:flex;align-items:center;gap:3px}
+.pm-act:hover{color:#fff}
+.pub-inp-area{display:flex;gap:8px;padding:10px 12px;background:var(--gw);border-top:1px solid var(--bdr)}
+.pub-inp{flex:1;padding:9px 14px;border:1.5px solid rgba(0,123,167,.18);border-radius:50px;font-size:13px;background:#fff;color:var(--t1);transition:border .2s}
+.pub-inp:focus{border-color:var(--cer)}
+.pub-send{width:36px;height:36px;border-radius:50%;background:var(--cer);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* Private list */
+.priv-list-wrap{background:#808080;min-height:calc(100vh - 150px);padding:10px}
+.priv-search{width:100%;padding:10px 14px;border:none;border-radius:10px;background:rgba(255,255,255,.9);font-size:13px;color:var(--t1);margin-bottom:8px;display:block}
+.priv-u-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(255,255,255,.88);border-radius:12px;cursor:pointer;
+  transition:background .2s;position:relative;margin-bottom:7px;
+}
+.priv-u-item:hover{background:#fff}
+.priv-uava{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--cer);flex-shrink:0}
+.priv-uname{font-size:14px;font-weight:700;color:var(--t1)}
+.priv-uemail{font-size:10px;color:var(--t2)}
+.priv-ubadge{display:none;position:absolute;top:7px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;min-width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center}
+.priv-ubadge.show{display:flex}
+/* Private chat window */
+#priv-chat-win{display:none;position:fixed;inset:0;z-index:200;background:var(--wd);flex-direction:column}
+#priv-chat-win.open{display:flex}
+.pc-hdr{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--cer);color:#fff;flex-shrink:0}
+.pc-back{background:none;border:none;color:#fff;cursor:pointer;padding:4px;margin-right:2px}
+.pc-ava{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.6);object-fit:cover}
+.pc-name{font-family:var(--fh);font-size:15px;font-weight:700}
+.pc-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.pc-bub{max-width:75%;padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.4;word-break:break-word;animation:bubbleIn .3s ease;position:relative}
+.pc-bub.sent{background:var(--cer);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.pc-bub.recv{background:#fff;color:var(--t1);align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.pc-time{font-size:9px;opacity:.6;margin-top:3px}
+.pc-inp-area{display:flex;gap:8px;padding:10px 12px;background:var(--wd);border-top:1px solid rgba(0,0,0,.08);flex-shrink:0}
+.pc-inp{flex:1;padding:9px 14px;border:1.5px solid rgba(0,123,167,.18);border-radius:50px;font-size:13px;background:#fff;color:var(--t1);transition:border .2s}
+.pc-inp:focus{border-color:var(--cer)}
+.pc-send{width:36px;height:36px;border-radius:50%;background:var(--cer);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.pc-send:hover{transform:scale(1.08)}
+
+/* ===== TIMELINE ===== */
+#pg-tl{background:var(--wc)}
+.tl-feed{padding:12px;display:flex;flex-direction:column;gap:14px}
+.post-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:var(--shd);animation:fadeSlide .35s ease;position:relative}
+[data-theme="dark"] .post-card{background:#1e1e30}
+.post-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.post-ava{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cer);flex-shrink:0}
+.post-uname{font-size:14px;font-weight:800;color:var(--t1);flex:1}
+.post-tm{font-size:10.5px;color:var(--tl)}
+.post-more-btn{background:none;border:none;color:var(--t2);padding:5px 9px;border-radius:9px;font-size:16px;line-height:1;transition:background .2s}
+.post-more-btn:hover{background:rgba(0,0,0,.05)}
+.post-img{width:100%;max-height:320px;object-fit:cover;display:block}
+.post-title{padding:10px 14px 6px;font-size:14px;font-weight:700;color:var(--t1);line-height:1.4}
+.post-acts{display:flex;align-items:center;gap:14px;padding:8px 14px 12px;background:var(--gw);border-top:1px solid var(--bdr)}
+[data-theme="dark"] .post-acts{background:#252540}
+.pa-btn{display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--t2);font-size:12px;padding:5px 8px;border-radius:9px;transition:all .2s}
+.pa-btn:hover{background:rgba(0,123,167,.07);color:var(--cer)}
+.pa-btn.liked .hrt{color:#ef4444}
+.post-cmts-section{padding:0 14px 12px;display:none}
+.post-cmts-section.open{display:block}
+.pcs-list{margin-bottom:8px}
+.pcs-cmt{padding:6px 0;border-top:1px solid var(--bdr);font-size:12px;color:var(--t2);line-height:1.45}
+.pcs-cmt-u{font-weight:700;color:var(--t1);margin-right:5px}
+.cmt-inp-row{display:flex;gap:6px}
+.cmt-inp{flex:1;padding:7px 12px;border:1.5px solid rgba(0,123,167,.18);border-radius:30px;font-size:12px;background:var(--gw);color:var(--t1)}
+.cmt-send{padding:7px 14px;background:var(--cer);color:#fff;border:none;border-radius:30px;font-size:11px;font-weight:700}
+/* post dropdown */
+.post-dd{display:none;position:absolute;right:8px;top:50px;background:#fff;border-radius:13px;box-shadow:0 8px 36px rgba(0,0,0,.15);z-index:80;min-width:158px;overflow:hidden;border:1px solid var(--bdr)}
+[data-theme="dark"] .post-dd{background:#252540}
+.post-dd.open{display:block;animation:fadeSlide .2s ease}
+.pdd-i{padding:11px 14px;font-size:13px;cursor:pointer;color:var(--t1);transition:background .2s}
+.pdd-i:hover{background:rgba(0,123,167,.06)}
+.pdd-i.red{color:#ef4444}
+.pdd-i.red:hover{background:rgba(239,68,68,.06)}
+
+/* ===== DISCOVER ===== */
+#pg-disc{background:var(--gw)}
+.disc-filter{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--gw);position:sticky;top:0;z-index:10}
+.df-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--cer);background:none;color:var(--cer);font-size:13px;font-weight:700;transition:all .2s}
+.df-btn.active{background:var(--cer);color:#fff}
+.disc-list{padding:12px;display:flex;flex-direction:column;gap:12px}
+.du-card{background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shd);border:1px solid var(--bdr)}
+[data-theme="dark"] .du-card{background:#1e1e30}
+.du-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.du-ava{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2.5px solid var(--cer);flex-shrink:0}
+.du-info{flex:1}
+.du-name{font-size:15px;font-weight:800;color:var(--t1)}
+.du-about{font-size:12px;color:var(--t2);margin-top:2px}
+.du-chat-btn{padding:7px 14px;background:var(--cer);color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0}
+.du-divider{border:none;border-top:1px solid var(--bdr);margin:8px 0}
+.du-post-preview{font-size:13px;color:var(--t2);line-height:1.45}
+.du-post-img{width:100%;height:130px;object-fit:cover;border-radius:11px;margin-top:8px;display:block}
+.du-acts{display:flex;gap:12px;margin-top:9px}
+.du-like-btn{display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--t2);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all .2s}
+.du-like-btn:hover{color:#ef4444;background:rgba(239,68,68,.06)}
+.du-like-count{font-size:11px;font-weight:700}
+
+/* ===== CREATE ===== */
+#pg-create{background:var(--gw);padding:20px}
+.cr-wrap{max-width:520px;margin:0 auto}
+.cr-h{font-family:var(--fh);font-size:21px;font-weight:700;color:var(--cer);margin-bottom:18px;letter-spacing:.5px}
+.upload-zone{
+  width:100%;height:200px;border:2px dashed rgba(0,123,167,.38);border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;background:#fff;transition:all .2s;margin-bottom:14px;
+  overflow:hidden;position:relative;
+}
+[data-theme="dark"] .upload-zone{background:#1e1e30}
+.upload-zone:hover{border-color:var(--cer);background:rgba(0,123,167,.03)}
+.upload-zone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.up-ph{display:flex;flex-direction:column;align-items:center;gap:9px;color:var(--tl);pointer-events:none;position:relative;z-index:1}
+.cr-label{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:5px;display:block}
+.cr-inp{width:100%;padding:10px 14px;border:1.5px solid rgba(0,123,167,.18);border-radius:11px;font-size:13px;background:#fff;color:var(--t1);margin-bottom:13px}
+[data-theme="dark"] .cr-inp{background:#1e1e30}
+.cr-inp:focus{border-color:var(--cer)}
+.vis-row{display:flex;gap:9px;margin-bottom:18px}
+.vis-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--cer);background:none;color:var(--cer);font-size:13px;font-weight:700;transition:all .2s}
+.vis-btn.active{background:var(--cer);color:#fff}
+.cr-submit{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--cer),var(--car));
+  color:#fff;border:none;border-radius:15px;
+  font-family:var(--fh);font-size:14px;font-weight:700;letter-spacing:1.5px;
+  transition:opacity .2s;
+}
+.cr-submit:hover{opacity:.88}
+.cr-submit:disabled{opacity:.6;cursor:default}
+
+/* ===== ACCOUNT ===== */
+#pg-acc{background:var(--gw)}
+.acc-hero{text-align:center;padding:28px 16px 18px;background:#fff;border-bottom:1px solid var(--bdr)}
+[data-theme="dark"] .acc-hero{background:#1e1e30}
+.acc-ava{width:82px;height:82px;border-radius:50%;object-fit:cover;border:3px solid var(--cer);box-shadow:0 0 0 6px rgba(0,123,167,.12);display:inline-block}
+.acc-uname{font-family:var(--fh);font-size:21px;font-weight:700;color:var(--t1);margin:11px 0 4px}
+.acc-about{font-size:13px;color:var(--t2);max-width:280px;margin:0 auto;line-height:1.5}
+.acc-grid{padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.acc-thumb{aspect-ratio:1;object-fit:cover;width:100%;border-radius:8px;cursor:pointer;transition:opacity .2s}
+.acc-thumb:hover{opacity:.85}
+
+/* ===== VAULT ===== */
+#pg-vault{background:var(--gw)}
+.vault-tabs{display:flex;gap:6px;padding:12px;border-bottom:1px solid var(--bdr);overflow-x:auto;background:var(--gw);position:sticky;top:0}
+.vt-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--cer);background:none;color:var(--cer);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .2s;flex-shrink:0}
+.vt-btn.active{background:var(--cer);color:#fff}
+.vault-body{padding:12px;display:flex;flex-direction:column;gap:10px}
+.vault-i{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shd)}
+[data-theme="dark"] .vault-i{background:#1e1e30}
+.vault-i img{width:100%;height:150px;object-fit:cover;display:block}
+.vault-i-body{padding:10px 12px}
+.vault-i-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.vault-i-tag{font-size:10.5px;color:var(--tl)}
+
+/* ===== SAVED ===== */
+#pg-saved{background:var(--gw);padding:12px}
+.saved-i{background:#fff;border-radius:14px;padding:13px;margin-bottom:10px;box-shadow:var(--shd)}
+[data-theme="dark"] .saved-i{background:#1e1e30}
+.saved-i img{width:100%;height:130px;object-fit:cover;border-radius:9px;margin-bottom:9px}
+.saved-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:8px}
+.saved-acts{display:flex;gap:8px}
+.s-restore{padding:7px 14px;background:var(--cer);color:#fff;border:none;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer}
+.s-del{padding:7px 14px;background:#ef4444;color:#fff;border:none;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer}
+
+/* ===== PREFERENCES ===== */
+#pg-pref{background:var(--gw);padding:16px}
+.pref-sec{background:#fff;border-radius:18px;padding:16px;margin-bottom:13px;box-shadow:var(--shd)}
+[data-theme="dark"] .pref-sec{background:#1e1e30}
+.pref-title{font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--cer);margin-bottom:13px}
+.theme-row{display:flex;gap:8px}
+.th-btn{flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--cer);background:none;color:var(--cer);font-size:12px;font-weight:700;transition:all .2s}
+.th-btn.active{background:var(--cer);color:#fff}
+.pref-ava-wrap{margin-bottom:12px}
+.pref-ava{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2.5px solid var(--cer);display:block;margin-bottom:9px}
+.change-photo-btn{padding:7px 14px;background:rgba(0,123,167,.08);border:1px solid var(--cer);color:var(--cer);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer}
+.pref-inp{width:100%;padding:10px 14px;border:1.5px solid rgba(0,123,167,.18);border-radius:11px;font-size:13px;background:var(--gw);color:var(--t1);margin-bottom:10px}
+.pref-inp:focus{border-color:var(--cer)}
+.pref-save{padding:10px 24px;background:var(--cer);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700}
+.pref-save:hover{opacity:.86}
+.char-cnt{font-size:10.5px;color:var(--tl);text-align:right;margin-top:-8px;margin-bottom:10px}
+
+/* ===== SHARED COMPONENTS ===== */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--tl)}
+.empty-state svg{width:56px;height:56px;opacity:.3;margin-bottom:12px}
+.empty-state p{font-size:14px;font-weight:600}
+.section-title{font-family:var(--fh);font-size:18px;font-weight:700;color:var(--t1);padding:16px;letter-spacing:.3px}
+/* SCREENSHOT BLOCK */
+#ss-block{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.88);align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+}
+#ss-block.show{display:flex;animation:overlayIn .2s ease}
+.ss-icon{font-size:52px}
+.ss-msg{color:var(--bs);font-family:var(--fh);font-size:22px;font-weight:700;text-align:center;letter-spacing:1px;padding:0 24px}
+/* TOAST */
+#toast{
+  display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.82);backdrop-filter:blur(8px);color:#fff;
+  padding:10px 20px;border-radius:50px;font-size:13px;font-weight:600;
+  z-index:9000;white-space:nowrap;animation:toastIn .25s ease;
+}
+/* SPINNER */
+.spin-wrap{display:flex;justify-content:center;padding:30px}
+.spinner{width:28px;height:28px;border:3px solid rgba(0,123,167,.15);border-top-color:var(--cer);border-radius:50%;animation:spinLoad .8s linear infinite}
+/* REPLY/COMMENT THREAD */
+.pm-thread{padding-left:12px;border-left:2px solid rgba(255,255,255,.3);margin-top:5px}
+.pm-reply-bub{background:rgba(255,255,255,.12);padding:6px 10px;border-radius:0 10px 10px 10px;color:rgba(255,255,255,.9);font-size:12px;line-height:1.4;margin-bottom:4px}
+/* CONTEXT MENU */
+.ctx-menu{display:none;position:fixed;background:#fff;border-radius:13px;box-shadow:0 8px 36px rgba(0,0,0,.16);z-index:8000;overflow:hidden;min-width:160px;border:1px solid var(--bdr)}
+[data-theme="dark"] .ctx-menu{background:#252540}
+.ctx-menu.show{display:block;animation:fadeSlide .2s ease}
+.ctx-i{padding:11px 16px;font-size:13px;cursor:pointer;color:var(--t1);transition:background .2s}
+.ctx-i:hover{background:rgba(0,123,167,.07)}
+.ctx-i.red{color:#ef4444}
+/* Comment input inline */
+.pub-cmt-input-wrap{padding:0 12px 10px 52px;display:none}
+.pub-cmt-input-wrap.show{display:flex;gap:6px}
+.pub-cmt-inp{flex:1;padding:6px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:20px;font-size:12px;background:rgba(255,255,255,.15);color:#fff}
+.pub-cmt-inp::placeholder{color:rgba(255,255,255,.55)}
+.pub-cmt-send{padding:6px 12px;background:rgba(255,255,255,.25);border:none;border-radius:20px;color:#fff;font-size:11px;font-weight:700}
+
+/* ===== LOADING ===== */
+#loading-screen{
+  display:flex;position:fixed;inset:0;z-index:9998;
+  background:linear-gradient(135deg,var(--g1),var(--g3),var(--g5),var(--g7));
+  background-size:300% 300%;animation:gradFlow 6s ease infinite;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;
+}
+.ls-logo{width:64px;height:64px;animation:moonGlow 2s ease-in-out infinite}
+.ls-txt{font-family:var(--fh);color:rgba(255,255,255,.85);font-size:12px;letter-spacing:2px}
+
+/* ===== RESPONSIVE ===== */
+@media(min-width:768px){
+  #sidebar{left:0;position:relative;height:100%;flex-shrink:0}
+  #app.ready{flex-direction:row}
+  #sb-overlay{display:none!important}
+  .menu-btn{display:none}
+  #main-scroll{flex:1}
+  #top-hdr{padding:12px 24px}
+}
+</style>
 </head>
 <body>
-    <!-- Screenshot Block Overlay -->
-    <div class="screenshot-block" id="screenshotBlock">
-        <div>Sorry, We Can't Provide</div>
-        <button onclick="document.getElementById('screenshotBlock').classList.remove('show')" style="margin-top: 1rem; padding: 0.8rem 2rem; background: white; color: #87CEEB; border: none; border-radius: 25px; cursor: pointer;">OK</button>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <svg class="ls-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="40" r="38" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    <path d="M24 40 Q32 28 40 40 Q48 52 56 40" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="28" r="6" fill="white" opacity=".9"/>
+    <path d="M34 54 Q40 62 46 54" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div class="ls-txt">DEEPSEEK 4.1</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-page" style="display:none">
+  <div class="lc">
+    <svg class="lc-logo" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="38" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+      <path d="M24 40 Q32 28 40 40 Q48 52 56 40" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="40" cy="28" r="7" fill="white" opacity=".95"/>
+      <path d="M34 54 Q40 62 46 54" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="lc-title">DEEPSEEK 4.1</div>
+    <div class="lc-sub">Your Social Universe<br>Sign in to continue</div>
+    <button class="g-btn" onclick="signInGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-inner">
+      <!-- Logo -->
+      <div class="sb-top">
+        <svg class="sb-logo" viewBox="0 0 60 60" fill="none">
+          <circle cx="30" cy="30" r="28" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+          <path d="M18 30 Q24 20 30 30 Q36 40 42 30" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <circle cx="30" cy="21" r="5" fill="white" opacity=".9"/>
+          <path d="M26 41 Q30 47 34 41" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="sb-appname">DEEPSEEK 4.1</div>
+      </div>
+      <!-- Marquee -->
+      <div class="sb-marq">
+        <span class="sb-marq-txt">Dashboard · Messages · Timeline · Discover · Create · Account · My Vault · Saved · Preferences · Sign Out &nbsp;&nbsp;&nbsp; Dashboard · Messages · Timeline · Discover · Create · Account · My Vault · Saved · Preferences · Sign Out</span>
+      </div>
+      <!-- Nav -->
+      <div class="sb-nav">
+        <div class="sn-item active" onclick="goPage('dash',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </div>
+        <div class="sn-item" onclick="goPage('msg',this)" id="sb-msg-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Messages
+          <span class="sn-badge" id="sb-msg-badge">0</span>
+        </div>
+        <div class="sn-item" onclick="goPage('tl',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          Timeline
+        </div>
+        <div class="sn-item" onclick="goPage('disc',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Discover
+        </div>
+        <div class="sn-item" onclick="goPage('create',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create
+        </div>
+        <div class="sn-item" onclick="goPage('acc',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Account
+        </div>
+        <div class="sn-item" onclick="goPage('vault',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          My Vault
+        </div>
+        <div class="sn-item" onclick="goPage('saved',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          Saved
+        </div>
+        <div class="sn-item" onclick="goPage('pref',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Preferences
+        </div>
+        <div class="sb-div"></div>
+        <div class="sn-item logout" onclick="doSignOut()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <!-- Social Apps -->
+      <div class="sb-social">
+        <div class="sb-soc-title">Open Apps</div>
+        <div class="sb-soc-grid">
+          <!-- Instagram -->
+          <div class="sa-item ig" onclick="openSocialApp('instagram')">
+            <svg width="26" height="26" viewBox="0 0 24 24" style="z-index:2;position:relative"><defs><linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f09433"/><stop offset="25%" stop-color="#e6683c"/><stop offset="50%" stop-color="#dc2743"/><stop offset="75%" stop-color="#cc2366"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="white"/></svg>
+            <span class="sa-name">Instagram</span>
+          </div>
+          <!-- Facebook -->
+          <div class="sa-item fb" onclick="openSocialApp('facebook')">
+            <svg width="26" height="26" viewBox="0 0 24 24" style="z-index:2;position:relative"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1877F2"/><path d="M15.5 8H13.5V6.5C13.5 6 13.8 5.75 14.2 5.75H15.5V3.5H13.5C11.6 3.5 10.5 4.7 10.5 6.5V8H9V10.5H10.5V17H13V10.5H15L15.5 8Z" fill="white"/></svg>
+            <span class="sa-name">Facebook</span>
+          </div>
+          <!-- YouTube -->
+          <div class="sa-item yt" onclick="openSocialApp('youtube')">
+            <svg width="26" height="26" viewBox="0 0 24 24" style="z-index:2;position:relative"><rect x="2" y="4" width="20" height="16" rx="4" fill="#FF0000"/><polygon points="10,8.5 10,15.5 16,12" fill="white"/></svg>
+            <span class="sa-name">YouTube</span>
+          </div>
+          <!-- WhatsApp -->
+          <div class="sa-item wa" onclick="openSocialApp('whatsapp')">
+            <svg width="26" height="26" viewBox="0 0 24 24" style="z-index:2;position:relative"><circle cx="12" cy="12" r="10" fill="#25D366"/><path d="M17 14.6c-.3-.1-1.7-.8-2-1-.3-.1-.5-.1-.7.1s-.8 1-1 1.2c-.2.2-.4.2-.7.1-1.9-.9-3.1-3.4-2.1-4.4.3-.3.7-.2.9.1.2.3.4.7.6.9.2.2.2.4 0 .6-.2.2-.4.5-.2.8.2.3.9 1.5 2 2 .5.2.7.1.9-.1.2-.2.3-.5.5-.6.2-.2.4-.1.6 0 .3.1 1.7.8 2 .9.3.1.5.2.5.4s-.1 1.5-.8 2.1c-.5.4-1.8.8-3.2.3-1.9-.7-3.4-2.4-3.7-4.3-.2-1.1.2-2.3 1-3 .3-.3.9-.5 1.2-.5.2 0 .4 0 .5.1l.6 1.5z" fill="white"/></svg>
+            <span class="sa-name">WhatsApp</span>
+          </div>
+          <!-- DeepSeek 4.1 with ocean -->
+          <div class="sa-item ds" onclick="openSocialApp('deepseek')" style="position:relative;overflow:hidden;grid-column:span 2">
+            <svg width="26" height="26" viewBox="0 0 40 40" style="z-index:2;position:relative"><circle cx="20" cy="20" r="18" fill="rgba(0,195,255,.25)" stroke="rgba(0,195,255,.6)" stroke-width="1.5"/><path d="M12 20 Q16 14 20 20 Q24 26 28 20" stroke="#00C3FF" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="20" cy="14" r="4" fill="#00C3FF" opacity=".85"/></svg>
+            <span class="sa-name" style="font-size:9px">DeepSeek 4.1</span>
+            <!-- Ocean waves -->
+            <div class="ds-ocean-wrap">
+              <svg class="ds-wave" viewBox="0 0 200 18" preserveAspectRatio="none"><path d="M0 10 Q25 0 50 10 Q75 20 100 10 Q125 0 150 10 Q175 20 200 10 Q225 0 250 10 Q275 20 300 10 Q325 0 350 10 Q375 20 400 10" stroke="none" fill="rgba(0,195,255,.35)"/><path d="M0 14 Q25 4 50 14 Q75 24 100 14 Q125 4 150 14 Q175 24 200 14 Q225 4 250 14 Q275 24 300 14 Q325 4 350 14 Q375 24 400 14" stroke="none" fill="rgba(34,211,238,.25)"/></svg>
+              <svg class="ds-wave ds-wave2" viewBox="0 0 200 18" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:200%;height:100%"><path d="M0 8 Q25 18 50 8 Q75 -2 100 8 Q125 18 150 8 Q175 -2 200 8 Q225 18 250 8 Q275 -2 300 8 Q325 18 350 8 Q375 -2 400 8" stroke="none" fill="rgba(56,189,248,.22)"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP HEADER -->
+  <div id="top-hdr">
+    <div class="hdr-l">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="hdr-pg-title" id="hdr-title">Dashboard</span>
+    </div>
+    <div class="hdr-r">
+      <div class="notif-wrap" onclick="goPage('msg',null)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge" id="hdr-notif-badge">0</span>
+      </div>
+      <img src="" alt="User" class="hdr-u-ava" id="hdr-u-ava" onclick="goPage('acc',null)">
+    </div>
+  </div>
+
+  <!-- MAIN SCROLL -->
+  <div id="main-scroll">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="pg-dash">
+      <div class="dash-ubar">
+        <img src="" class="dash-uava" id="dash-uava" alt="">
+        <div>
+          <div class="dash-ugmail" id="dash-ugmail">Loading...</div>
+          <div class="dash-uname" id="dash-uname">Welcome 👋</div>
+        </div>
+      </div>
+      <div class="dash-hero">
+        <svg class="dash-clogo" viewBox="0 0 60 60" fill="none">
+          <circle cx="30" cy="30" r="28" fill="rgba(0,123,167,.12)" stroke="rgba(0,123,167,.3)" stroke-width="1.5"/>
+          <path d="M18 30 Q24 20 30 30 Q36 40 42 30" stroke="#007BA7" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="30" cy="21" r="6" fill="#007BA7" opacity=".85"/>
+          <path d="M26 41 Q30 47 34 41" stroke="#007BA7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="dash-htitle">How can I help you today? 🌊</div>
+      </div>
+      <!-- AI Box -->
+      <div class="ai-box">
+        <div class="ai-title">ASK ANYTHING</div>
+        <div class="ai-msgs" id="ai-msgs">
+          <div class="ai-bubble bot">Namaste! 🙏 Main aapki madad ke liye taiyar hun. Kuch bhi poochho — Hindi, English, ya Hinglish mein! <span class="ai-mention">— @suthariya_sahil</span></div>
+        </div>
+        <div class="ai-inp-row">
+          <input class="ai-inp" id="ai-inp" placeholder="Type your question here..." onkeydown="if(event.key==='Enter')sendAiMsg()">
+          <button class="ai-send" onclick="sendAiMsg()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Starting Points -->
+      <div class="sp-wrap">
+        <div class="sp-hdr" onclick="toggleSP()">
+          ▼ STARTING POINTS
+          <span class="sp-arr" id="sp-arr">▲</span>
+        </div>
+        <div class="sp-body" id="sp-body">
+          <div class="sp-pills">
+            <button class="sp-pill" onclick="goPage('dash',null)">🏠 Dashboard</button>
+            <button class="sp-pill" onclick="goPage('msg',null)">💬 Messages</button>
+            <button class="sp-pill" onclick="goPage('tl',null)">📰 Timeline</button>
+            <button class="sp-pill" onclick="goPage('disc',null)">🔍 Discover</button>
+            <button class="sp-pill" onclick="goPage('create',null)">➕ Create</button>
+            <button class="sp-pill" onclick="goPage('acc',null)">👤 Account</button>
+            <button class="sp-pill" onclick="goPage('vault',null)">🔒 My Vault</button>
+            <button class="sp-pill" onclick="goPage('saved',null)">🗂 Saved</button>
+            <button class="sp-pill" onclick="goPage('pref',null)">⚙️ Preferences</button>
+          </div>
+          <!-- News -->
+          <div class="news-hdr">
+            <span class="news-lbl">NEWS</span>
+            <div class="lang-row">
+              <button class="lang-b active" onclick="setNewsLang('en',this)">EN</button>
+              <button class="lang-b" onclick="setNewsLang('hi',this)">हिंदी</button>
+              <button class="lang-b" onclick="setNewsLang('gu',this)">ગુ</button>
+              <button class="lang-b" onclick="setNewsLang('hl',this)">HG</button>
+            </div>
+          </div>
+          <div class="nc-cats">
+            <button class="nc-cat-b active" onclick="filterNews('all',this)">All</button>
+            <button class="nc-cat-b" onclick="filterNews('case',this)">Case</button>
+            <button class="nc-cat-b" onclick="filterNews('harassment',this)">Harassment</button>
+            <button class="nc-cat-b" onclick="filterNews('ai',this)">AI</button>
+            <button class="nc-cat-b" onclick="filterNews('love',this)">Love</button>
+          </div>
+          <div class="nc-list" id="news-list"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Sidebar -->
-    <div id="sidebar">
-        <div class="logo">
-            <h1>Deepseek 4.1</h1>
-            <div class="sea-waves">
-                <div class="wave"></div>
-                <div class="wave"></div>
-            </div>
+    <!-- MESSAGES -->
+    <div class="page" id="pg-msg">
+      <div class="msg-mode-row">
+        <button class="mm-btn active" id="mm-pub" onclick="switchMsgMode('pub')">Public Messages</button>
+        <button class="mm-btn" id="mm-priv" onclick="switchMsgMode('priv')">Private Messages</button>
+      </div>
+      <!-- Public -->
+      <div id="pub-section">
+        <div class="pub-msgs" id="pub-msgs-list"></div>
+        <div class="pub-inp-area">
+          <input class="pub-inp" id="pub-inp" placeholder="Message everyone..." onkeydown="if(event.key==='Enter')sendPublicMsg()">
+          <button class="pub-send" onclick="sendPublicMsg()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
-        
-        <!-- Social Apps Bar -->
-        <div class="social-bar">
-            <div class="social-item" onclick="openSocial('instagram')">
-                <div style="font-size: 2rem; margin-bottom: 0.2rem;">📷</div>
-                Instagram
-            </div>
-            <div class="social-item" onclick="openSocial('facebook')">
-                <div style="font-size: 2rem; margin-bottom: 0.2rem;">📘</div>
-                Facebook
-            </div>
-            <div class="social-item" onclick="openSocial('youtube')">
-                <div style="font-size: 2rem; margin-bottom: 0.2rem;">▶️</div>
-                YouTube
-            </div>
-            <div class="social-item" onclick="openSocial('whatsapp')">
-                <div style="font-size: 2rem; margin-bottom: 0.2rem;">💬</div>
-                WhatsApp
-            </div>
-            <div class="social-item" onclick="openSocial('deepseek')">
-                <div style="font-size: 2rem; margin-bottom: 0.2rem;">🤖</div>
-                Deepseek 4.1
-            </div>
+      </div>
+      <!-- Private -->
+      <div id="priv-section">
+        <div class="priv-list-wrap">
+          <input class="priv-search" id="priv-search" placeholder="🔍 Search users..." oninput="filterPrivUsers()">
+          <div id="priv-users-list"></div>
         </div>
+      </div>
+    </div>
 
-        <div class="divider"></div>
+    <!-- PRIVATE CHAT WINDOW (fullscreen) -->
+    <div id="priv-chat-win">
+      <div class="pc-hdr">
+        <button class="pc-back" onclick="closePrivChat()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <img src="" class="pc-ava" id="pc-ava" alt="">
+        <div>
+          <div class="pc-name" id="pc-name">Chat</div>
+        </div>
+      </div>
+      <div class="pc-msgs" id="pc-msgs-list"></div>
+      <div class="pc-inp-area">
+        <input class="pc-inp" id="pc-inp" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPrivMsg()">
+        <button class="pc-send" onclick="sendPrivMsg()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
 
-        <!-- Menu Items -->
-        <div class="menu-item active" data-section="dashboard">
-            <i data-lucide="home"></i>
-            <span>Dashboard</span>
+    <!-- TIMELINE -->
+    <div class="page" id="pg-tl">
+      <div class="tl-feed" id="tl-feed">
+        <div class="spin-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- DISCOVER -->
+    <div class="page" id="pg-disc">
+      <div class="disc-filter">
+        <button class="df-btn active" id="df-rec" onclick="setDiscFilter('recent',this)">Recently</button>
+        <button class="df-btn" id="df-all" onclick="setDiscFilter('all',this)">All</button>
+      </div>
+      <div class="disc-list" id="disc-list">
+        <div class="spin-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- CREATE -->
+    <div class="page" id="pg-create">
+      <div class="cr-wrap">
+        <div class="cr-h">✨ Create Post</div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('img-file').click()">
+          <div class="up-ph" id="up-ph">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Tap to select image</span>
+          </div>
+          <img id="img-preview" src="" alt="" style="display:none">
         </div>
-        <div class="menu-item" data-section="messages">
-            <i data-lucide="message-circle"></i>
-            <span>Messages</span>
+        <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImgSelect(this)">
+        <label class="cr-label">Post Title</label>
+        <input class="cr-inp" id="cr-title" placeholder="Write a title... (emoji ok 😍)">
+        <label class="cr-label">Visibility</label>
+        <div class="vis-row">
+          <button class="vis-btn active" id="vis-pub" onclick="setVis('public')">🌍 Public</button>
+          <button class="vis-btn" id="vis-priv" onclick="setVis('private')">🔒 Private</button>
         </div>
-        <div class="menu-item" data-section="timeline">
-            <i data-lucide="activity"></i>
-            <span>Timeline</span>
+        <button class="cr-submit" id="cr-submit" onclick="submitPost()">POST NOW</button>
+      </div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="page" id="pg-acc">
+      <div class="acc-hero">
+        <img src="" class="acc-ava" id="acc-ava" alt="">
+        <div class="acc-uname" id="acc-uname">Loading...</div>
+        <div class="acc-about" id="acc-about">No bio yet</div>
+      </div>
+      <div class="acc-grid" id="acc-grid"></div>
+    </div>
+
+    <!-- VAULT -->
+    <div class="page" id="pg-vault">
+      <div class="vault-tabs">
+        <button class="vt-btn active" onclick="setVaultTab('all',this)">All</button>
+        <button class="vt-btn" onclick="setVaultTab('post',this)">Post</button>
+        <button class="vt-btn" onclick="setVaultTab('chats',this)">Chats</button>
+        <button class="vt-btn" onclick="setVaultTab('archive',this)">Archive</button>
+      </div>
+      <div class="vault-body" id="vault-body"></div>
+    </div>
+
+    <!-- SAVED -->
+    <div class="page" id="pg-saved">
+      <div class="section-title">🗂️ Saved Items</div>
+      <div id="saved-list"></div>
+    </div>
+
+    <!-- PREFERENCES -->
+    <div class="page" id="pg-pref">
+      <div class="section-title">⚙️ Preferences</div>
+      <!-- Theme -->
+      <div class="pref-sec">
+        <div class="pref-title">Theme</div>
+        <div class="theme-row">
+          <button class="th-btn active" id="th-def" onclick="setTheme('default',this)">Default</button>
+          <button class="th-btn" id="th-dark" onclick="setTheme('dark',this)">Dark</button>
+          <button class="th-btn" id="th-sys" onclick="setTheme('system',this)">System</button>
         </div>
-        <div class="menu-item" data-section="discover">
-            <i data-lucide="search"></
+      </div>
+      <!-- Profile -->
+      <div class="pref-sec">
+        <div class="pref-title">Profile</div>
+        <div class="pref-ava-wrap">
+          <img src="" class="pref-ava" id="pref-ava" alt="">
+          <button class="change-photo-btn" onclick="document.getElementById('pref-photo-file').click()">Change Photo</button>
+          <input type="file" id="pref-photo-file" accept="image/*" style="display:none" onchange="handlePrefPhoto(this)">
+        </div>
+        <label class="cr-label">Username</label>
+        <input class="pref-inp" id="pref-uname" placeholder="Your username" maxlength="30">
+        <label class="cr-label">About (max 100 chars)</label>
+        <textarea class="pref-inp" id="pref-about" rows="3" maxlength="100" placeholder="Tell something about yourself... emoji ok 😊" oninput="updateCharCount()"></textarea>
+        <div class="char-cnt"><span id="char-cnt">0</span>/100</div>
+        <button class="pref-save" onclick="savePrefs()">Save Changes</button>
+      </div>
+    </div>
+
+  </div><!-- end main-scroll -->
+</div><!-- end app -->
+
+<!-- Context Menu -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-i" onclick="ctxAction('reply')">↩ Reply</div>
+  <div class="ctx-i" onclick="ctxAction('comment')">💬 Comment</div>
+  <div class="ctx-i" onclick="ctxAction('like')">❤️ Like</div>
+  <div class="ctx-i red" id="ctx-delete-opt" style="display:none" onclick="ctxAction('delete')">🗑 Delete</div>
+</div>
+
+<!-- Screenshot Block -->
+<div id="ss-block">
+  <div class="ss-icon">🚫</div>
+  <div class="ss-msg">Sorry, We Can't Provide</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <svg class="ls-logo" viewBox="0 0 80 80" fill="none">
+    <circle cx="40" cy="40" r="38" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    <path d="M24 40 Q32 28 40 40 Q48 52 56 40" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="28" r="6" fill="white" opacity=".9"/>
+    <path d="M34 54 Q40 62 46 54" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div class="ls-txt">DEEPSEEK 4.1</div>
+</div>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG — REPLACE WITH YOUR OWN CONFIG
+// ============================================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// ============================================================
+// INIT
+// ============================================================
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+let currentUser = null;
+let currentUserData = null;
+let pubMsgListener = null;
+let privChatListener = null;
+let activeChatUID = null;
+let activeChatName = null;
+let allUsers = [];
+let currentVis = 'public';
+let currentVaultTab = 'all';
+let currentDiscFilter = 'recent';
+let currentNewsLang = 'en';
+let currentNewsCat = 'all';
+let ctxTargetMsgId = null;
+let ctxTargetEl = null;
+const ADMIN_EMAIL = 'rambaisaket03@gmail.com';
+
+// ============================================================
+// AUTH
+// ============================================================
+auth.onAuthStateChanged(async (user) => {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    await loadOrCreateUser(user);
+    initApp();
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+  }
+});
+
+async function signInGoogle() {
+  try {
+    await auth.signInWithPopup(provider);
+  } catch(e) {
+    showToast('Sign in failed: ' + e.message);
+  }
+}
+
+async function loadOrCreateUser(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    const udata = {
+      uid: user.uid,
+      email: user.email,
+      username: user.displayName ? user.displayName.split(' ')[0] : 'User',
+      displayName: user.displayName || 'User',
+      photoURL: user.photoURL || '',
+      about: '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      theme: 'default'
+    };
+    await ref.set(udata);
+    currentUserData = udata;
+  } else {
+    currentUserData = snap.data();
+    if (!currentUserData.theme) {
+      await ref.update({theme:'default'});
+      currentUserData.theme = 'default';
+    }
+  }
+}
+
+async function doSignOut() {
+  if (pubMsgListener) { pubMsgListener(); pubMsgListener = null; }
+  if (privChatListener) { privChatListener(); privChatListener = null; }
+  await auth.signOut();
+  window.location.reload();
+}
+
+// ============================================================
+// INIT APP
+// ============================================================
+function initApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').classList.add('ready');
+
+  // Set user info
+  const ava = currentUserData.photoURL || makeAvatar(currentUserData.username);
+  document.getElementById('hdr-u-ava').src = ava;
+  document.getElementById('dash-uava').src = ava;
+  document.getElementById('dash-ugmail').textContent = currentUserData.email || '';
+  document.getElementById('dash-uname').textContent = currentUserData.username + ' 👋';
+  document.getElementById('acc-ava').src = ava;
+  document.getElementById('acc-uname').textContent = currentUserData.username;
+  document.getElementById('acc-about').textContent = currentUserData.about || 'No bio yet';
+  document.getElementById('pref-ava').src = ava;
+  document.getElementById('pref-uname').value = currentUserData.username;
+  document.getElementById('pref-about').value = currentUserData.about || '';
+  document.getElementById('char-cnt').textContent = (currentUserData.about || '').length;
+
+  // Apply saved theme
+  applyTheme(currentUserData.theme || 'default', false);
+
+  renderNews();
+  loadPublicMessages();
+  loadPrivateUsers();
+  loadTimeline();
+  loadDiscover();
+  loadVault();
+  loadSaved();
+  loadAccountPosts();
+  startNotifListener();
+  setupScreenshotPrevention();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageMap = {
+  'dash':'Dashboard','msg':'Messages','tl':'Timeline',
+  'disc':'Discover','create':'Create','acc':'Account',
+  'vault':'My Vault','saved':'Saved','pref':'Preferences'
+};
+
+function goPage(id, sbEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
+  const pg = document.getElementById('pg-'+id);
+  if (pg) pg.classList.add('active');
+  if (sbEl) sbEl.classList.add('active');
+  document.getElementById('hdr-title').textContent = pageMap[id] || 'App';
+  closeSidebar();
+  // scroll top
+  document.getElementById('main-scroll').scrollTop = 0;
+  // page specific
+  if (id==='tl') loadTimeline();
+  if (id==='disc') loadDiscover();
+  if (id==='vault') loadVault();
+  if (id==='saved') loadSaved();
+  if (id==='acc') loadAccountPosts();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+}
+
+// ============================================================
+// SOCIAL APP LINKS
+// ============================================================
+function openSocialApp(app) {
+  const links = {
+    instagram: {scheme:'instagram://', web:'https://www.instagram.com/accounts/login/'},
+    facebook:  {scheme:'fb://',         web:'https://www.facebook.com/login/'},
+    youtube:   {scheme:'vnd.youtube://',web:'https://www.youtube.com'},
+    whatsapp:  {scheme:'whatsapp://',   web:'https://whatsapp.com/download'},
+    deepseek:  {scheme:'deepseek://',   web:'https://www.deepseek.com'}
+  };
+  const l = links[app];
+  if (!l) return;
+  // Try deep link, fallback to web
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  const t = Date.now();
+  iframe.src = l.scheme;
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+    if (Date.now() - t < 1500) window.open(l.web, '_blank');
+  }, 1000);
+  window.location.href = l.scheme;
+  setTimeout(() => { window.open(l.web, '_blank'); }, 1200);
+}
+
+// ============================================================
+// AI RESPONSE SYSTEM
+// ============================================================
+function sendAiMsg() {
+  const inp = document.getElementById('ai-inp');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  addAiBubble(txt, 'user');
+  setTimeout(() => {
+    const resp = generateAIResponse(txt);
+    addAiBubble(resp, 'bot');
+  }, 600);
+}
+
+function addAiBubble(txt, type) {
+  const cont = document.getElementById('ai-msgs');
+  const div = document.createElement('div');
+  div.className = `ai-bubble ${type}`;
+  div.innerHTML = txt;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+}
+
+function detectLang(txt) {
+  const devHindi = /[\u0900-\u097F]/;
+  const devGujarati = /[\u0A80-\u0AFF]/;
+  if (devHindi.test(txt)) return 'hi';
+  if (devGujarati.test(txt)) return 'gu';
+  if (/[a-zA-Z]/.test(txt) && /[^\x00-\x7F]/.test(txt)) return 'hinglish';
+  if (/[a-zA-Z]/.test(txt)) return 'en';
+  return 'hinglish';
+}
+
+function isGibberish(txt) {
+  const words = txt.trim().split(/\s+/);
+  let gibCount = 0;
+  for (const w of words) {
+    if (w.length > 5 && !/[aeiouAEIOU]/.test(w)) gibCount++;
+    if (/[!@#$%^&*()=\[\]{};:"\\|<>\/~`]/.test(w)) gibCount++;
+  }
+  if (txt.replace(/[^a-zA-Z\u0900-\u097F\u0A80-\u0AFF]/g,'').length < 2) return true;
+  return gibCount > words.length * 0.6;
+}
+
+function generateAIResponse(txt) {
+  const tl = txt.toLowerCase();
+  const lang = detectLang(txt);
+  const tail = ` <span class="ai-mention">— @suthariya_sahil</span>`;
+
+  if (isGibberish(txt)) {
+    const r = {
+      hi: 'Aap kya kehna chahte the? Kripya dobara likhein 😊',
+      en: "What did you mean? Please retype your message 😊",
+      hinglish: 'Bhai kya likha hai? Dobara properly likhna 😄',
+      gu: 'તમે શું કહેવા ઈચ્છો છો? કૃપા કરીને ફરી લખો 😊'
+    };
+    return (r[lang]||r['en']) + tail;
+  }
+
+  // Owner / creator
+  if (/owner|malik|boss|creator|banaya|kisne|kaun hai tu|who made|who created|apne bare/i.test(tl)) {
+    return `Mujhe <strong>Sahil</strong> ne banaya hai! 🙏<br>
+    📱 WhatsApp: <a href="https://wa.me/9313195257" target="_blank">wa.me/9313195257</a><br>
+    📸 Instagram: <a href="https://instagram.com/suthariya_sahil" target="_blank">@suthariya_sahil</a><br>
+    📘 Facebook: <a href="https://facebook.com/DySahil" target="_blank">DySahil</a><br>
+    ▶️ YouTube: <a href="https://youtube.com/@dysahil.1" target="_blank">@dysahil.1</a>${tail}`;
+  }
+
+  // Who are you
+  if (/tum kaun|who are you|aap kya|kya ho tum|what are you|apna naam/i.test(tl)) {
+    const r = {
+      hi: 'Main Deepseek 4.1 hun — ek social media platform jahan aap chat, photos share, aur naye log discover kar sakte ho! 🌊',
+      en: 'I am Deepseek 4.1 — a social media platform for chat, photo sharing, discovery and more! 🌊',
+      hinglish: 'Main Deepseek 4.1 hun bhai — ek full social media app jisme chat, posts, timeline, vault sab kuch hai! 🌊'
+    };
+    return (r[lang]||r['en']) + tail;
+  }
+
+  // What can you do
+  if (/kya kar|help|features|sab kuch|kya hai|what can|capabilities/i.test(tl)) {
+    return `Ye hai meri powers! 💪<br>
+    🏠 <b>Dashboard</b> — Overview & AI chat<br>
+    💬 <b>Messages</b> — Public & Private chat<br>
+    📰 <b>Timeline</b> — Sabke posts dekho<br>
+    🔍 <b>Discover</b> — Naye log dhundo<br>
+    ➕ <b>Create</b> — Photo/post upload<br>
+    🔒 <b>My Vault</b> — Private photos<br>
+    🗂 <b>Saved</b> — Saved posts<br>
+    ⚙️ <b>Preferences</b> — Settings${tail}`;
+  }
+
+  // Image create
+  if (/image|photo banao|create image|generate image|pic banao|drawing|illustration/i.test(tl)) {
+    return `Image create karne ke liye ChatGPT use karo! 🎨<br>
+    <a href="https://chatgpt.com" target="_blank">👉 Open ChatGPT</a><br>
+    (Agar app installed hai toh wahan tap karo, warna website khulegi)${tail}`;
+  }
+
+  // Research / educational
+  if (/research|history|science|definition|explain|padho|samjhao|kya hota|what is|how does|formula|theory/i.test(tl)) {
+    return `Ye deep question hai! DeepSeek AI pe poochho: <a href="https://deepseek.com" target="_blank">🔬 deepseek.com</a><br>Wahan bahut detailed answer milega!${tail}`;
+  }
+
+  // Link shared
+  if (/http|www\.|\.com|\.in|\.org/i.test(tl)) {
+    return `Link share karne ke liye <b>Timeline</b> ya <b>My Vault</b> best hai! 🔗<br>Wahan post create karo aur link title mein dalo.${tail}`;
+  }
+
+  // Messages section
+  if (/message|chat|baat|conversation|inbox/i.test(tl)) {
+    return `Messages section mein jao! 💬<br>
+    • <b>Public Messages</b> — Sabke saath chat<br>
+    • <b>Private Messages</b> — 1-to-1 private chat${tail}`;
+  }
+
+  // Timeline
+  if (/timeline|feed|post|upload|share karo/i.test(tl)) {
+    return `Timeline par sabke posts dikhe! 📰<br>
+    Create section se apna post upload karo — public ya private set kar sakte ho! ✨${tail}`;
+  }
+
+  // Discover
+  if (/discover|naye log|dhundo|explore|user|profile/i.test(tl)) {
+    return `Discover section mein sab users aur unke posts dikhe! 🔍<br>
+    Wahan se direct chat bhi kar sakte ho! 👋${tail}`;
+  }
+
+  // Vault
+  if (/vault|private|secret|chhupa/i.test(tl)) {
+    return `My Vault — sirf tumhare liye! 🔒<br>
+    Private photos, chats, aur archived content sab yahan safe rehta hai.${tail}`;
+  }
+
+  // Settings
+  if (/setting|preferences|theme|dark mode|profile change|username/i.test(tl)) {
+    return `Preferences section mein jao! ⚙️<br>
+    • Theme change karo (Default/Dark/System)<br>
+    • Username aur photo badlo<br>
+    • About section likho${tail}`;
+  }
+
+  // Greeting
+  if (/hii|hello|hi |hey|namaste|namaskar|salaam|salam/i.test(tl)) {
+    const greets = {
+      hi: 'Namaste! 🙏 Kya madad kar sakta hun aapki aaj?',
+      en: 'Hello! 👋 How can I help you today?',
+      hinglish: 'Hello bhai! 😄 Bol kya kaam hai aaj?'
+    };
+    return (greets[lang]||greets['en']) + tail;
+  }
+
+  // Default — route to DeepSeek
+  return `Yeh mere scope se thoda bahar hai! 🤔<br>
+  DeepSeek AI pe poochho: <a href="https://deepseek.com" target="_blank">🌐 deepseek.com</a>${tail}`;
+}
+
+// ============================================================
+// STARTING POINTS TOGGLE
+// ============================================================
+function toggleSP() {
+  const body = document.getElementById('sp-body');
+  const arr = document.getElementById('sp-arr');
+  body.classList.toggle('open');
+  arr.classList.toggle('up');
+}
+
+// ============================================================
+// NEWS
+// ============================================================
+const newsData = {
+  en: [
+    {cat:'ai',title:'AI Revolution: Deepseek 4.1 Launched',summary:'The newest AI model promises 10x efficiency with ocean-inspired architecture and natural language mastery.'},
+    {cat:'case',title:'Supreme Court Landmark Ruling on Privacy',summary:'Historic judgment strengthens digital privacy rights for citizens across India in data breach cases.'},
+    {cat:'harassment',title:'New Anti-Harassment Laws Passed',summary:'Parliament passes strict new laws making online harassment punishable with up to 3 years in jail.'},
+    {cat:'love',title:'Study: Social Media Connects More Couples',summary:'A new study shows 40% of relationships begin online, with social platforms being the top meeting spot.'},
+    {cat:'ai',title:'ChatGPT Reaches 200 Million Users',summary:'OpenAI announces record milestone as AI adoption continues to accelerate globally across all sectors.'},
+    {cat:'case',title:'Landmark Cybercrime Case Verdict Today',summary:'Court delivers verdict in major cybercrime case involving financial fraud worth crores of rupees.'},
+    {cat:'harassment',title:'Schools Launch Anti-Bullying Campaign',summary:'National initiative educates students about digital safety, consent, and standing up against bullying.'},
+    {cat:'love',title:'Valentine\'s Day App Usage Breaks Records',summary:'Dating and social apps saw record-breaking activity this year with millions seeking connections online.'}
+  ],
+  hi: [
+    {cat:'ai',title:'AI क्रांति: Deepseek 4.1 लॉन्च',summary:'नया AI मॉडल 10 गुना बेहतर प्रदर्शन का वादा करता है। प्राकृतिक भाषा में बेजोड़ क्षमताएं।'},
+    {cat:'case',title:'सुप्रीम कोर्ट का ऐतिहासिक फैसला',summary:'डिजिटल गोपनीयता के लिए ऐतिहासिक फैसला। भारत के नागरिकों को डेटा सुरक्षा मिली।'},
+    {cat:'harassment',title:'ऑनलाइन उत्पीड़न के खिलाफ नया कानून',summary:'संसद ने सख्त कानून पास किया। ऑनलाइन उत्पीड़न पर 3 साल की जेल का प्रावधान।'},
+    {cat:'love',title:'सोशल मीडिया से बन रहे रिश्ते',summary:'नए शोध के अनुसार 40% रिश्ते अब ऑनलाइन शुरू होते हैं। सोशल प्लेटफॉर्म सबसे बड़ा माध्यम।'},
+    {cat:'ai',title:'ChatGPT के 20 करोड़ यूजर',summary:'OpenAI ने रिकॉर्ड उपलब्धि हासिल की। AI का इस्तेमाल दुनियाभर में तेजी से बढ़ रहा है।'}
+  ],
+  gu: [
+    {cat:'ai',title:'AI ક્રાંતિ: Deepseek 4.1 લૉન્ચ',summary:'નવો AI મૉડલ 10 ગણી કાર્યક્ષમતાનું વચન આપે છે. કુદરતી ભાષામાં અજોડ ક્ષમતાઓ.'},
+    {cat:'case',title:'સુપ્રીમ કોર્ટનો ઐતિહાસિક નિર્ણય',summary:'ડિજિટલ ગોપનીયતા માટે ઐતિહાસિક નિર્ણય. ભારતના નાગરિકોને ડેટા સુરક્ષા મળી.'},
+    {cat:'harassment',title:'ઑનલાઇન ઉત્પીડન સામે નવો કાયદો',summary:'સંસદે કડક કાયદો પસાર કર્યો. ઑનલાઇન ઉત્પીડન પર 3 વર્ષ જેલની જોગવાઈ.'},
+    {cat:'love',title:'સોશ્યલ મીડિયા પ્રેમ સંબંધો',summary:'40% સંબંધો ઑનલાઇન શરૂ થાય છે. સોશ્યલ પ્લૅટફૉર્મ સૌથી મોટું માધ્યમ.'}
+  ],
+  hl: [
+    {cat:'ai',title:'AI Revolution: Deepseek 4.1 Launch Ho Gaya!',summary:'Naya AI model 10x better kaam karta hai bhai! Natural language mein ekdum mast capabilities.'},
+    {cat:'case',title:'Supreme Court ne Bada Faisla Diya',summary:'Digital privacy ke liye historic judgment. Ab data breach mein strict action hoga bhai!'},
+    {cat:'harassment',title:'Online Harassment ke Khilaf Sख्त Kanoon',summary:'Parliament ne pass kiya strict law. Online harassment kiya toh 3 saal jail pakki!'},
+    {cat:'love',title:'Social Media se Ban Rahe Relationships',summary:'40% rishtey ab online start hote hain yaar. Social platforms sabse bada meeting point ban gaya!'},
+    {cat:'ai',title:'ChatGPT ke 20 Crore Users Ho Gaye',summary:'OpenAI ka record milestone! AI ka use pure duniya mein tezi se badh raha hai boss!'}
+  ]
+};
+
+const newsSVGs = [
+  `<svg viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="90" fill="#0f766e"/><circle cx="80" cy="45" r="35" fill="rgba(255,255,255,.08)"/><path d="M50 45 Q65 25 80 45 Q95 65 110 45" stroke="rgba(255,255,255,.6)" stroke-width="3" fill="none"/><circle cx="80" cy="25" r="8" fill="rgba(255,255,255,.5)"/><rect x="150" y="20" width="220" height="8" rx="4" fill="rgba(255,255,255,.3)"/><rect x="150" y="36" width="180" height="6" rx="3" fill="rgba(255,255,255,.2)"/><rect x="150" y="50" width="200" height="6" rx="3" fill="rgba(255,255,255,.15)"/></svg>`,
+  `<svg viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="90" fill="#1e3a5f"/><polygon points="60,70 80,15 100,70" fill="rgba(255,255,255,.2)"/><rect x="40" y="60" width="80" height="10" rx="2" fill="rgba(255,255,255,.1)"/><rect x="150" y="20" width="220" height="8" rx="4" fill="rgba(255,255,255,.3)"/><rect x="150" y="36" width="180" height="6" rx="3" fill="rgba(255,255,255,.2)"/><rect x="150" y="50" width="200" height="6" rx="3" fill="rgba(255,255,255,.15)"/></svg>`,
+  `<svg viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="90" fill="#7c2d12"/><circle cx="80" cy="45" r="28" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"/><circle cx="80" cy="45" r="16" fill="rgba(255,255,255,.15)"/><circle cx="80" cy="45" r="6" fill="rgba(255,255,255,.4)"/><rect x="150" y="20" width="220" height="8" rx="4" fill="rgba(255,255,255,.3)"/><rect x="150" y="36" width="180" height="6" rx="3" fill="rgba(255,255,255,.2)"/><rect x="150" y="50" width="200" height="6" rx="3" fill="rgba(255,255,255,.15)"/></svg>`,
+  `<svg viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="90" fill="#4c1d95"/><path d="M50 60 Q65 20 80 45 Q95 70 110 30" stroke="rgba(255,200,255,.6)" stroke-width="3" fill="none"/><circle cx="50" cy="60" r="4" fill="rgba(255,200,255,.6)"/><circle cx="110" cy="30" r="4" fill="rgba(255,200,255,.6)"/><rect x="150" y="20" width="220" height="8" rx="4" fill="rgba(255,255,255,.3)"/><rect x="150" y="36" width="180" height="6" rx="3" fill="rgba(255,255,255,.2)"/><rect x="150" y="50" width="200" height="6" rx="3" fill="rgba(255,255,255,.15)"/></svg>`,
+  `<svg viewBox="0 0 400 90" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="90" fill="#065f46"/><rect x="55" y="25" width="50" height="40" rx="4" fill="rgba(255,255,255,.15)"/><rect x="63" y="32" width="34" height="5" rx="2" fill="rgba(255,255,255,.4)"/><rect x="63" y="42" width="28" height="4" rx="2" fill="rgba(255,255,255,.25)"/><rect x="63" y="51" width="31" height="4" rx="2" fill="rgba(255,255,255,.2)"/><rect x="150" y="20" width="220" height="8" rx="4" fill="rgba(255,255,255,.3)"/><rect x="150" y="36" width="180" height="6" rx="3" fill="rgba(255,255,255,.2)"/><rect x="150" y="50" width="200" height="6" rx="3" fill="rgba(255,255,255,.15)"/></svg>`
+];
+
+function renderNews() {
+  const list = document.getElementById('news-list');
+  const data = (newsData[currentNewsLang] || newsData['en']).filter(n => currentNewsCat === 'all' || n.cat === currentNewsCat);
+  if (!data.length) { list.innerHTML = '<p style="color:var(--tl);font-size:12px;text-align:center">No news in this category</p>'; return; }
+  list.innerHTML = data.map((n,i) => `
+    <div class="nc">
+      ${newsSVGs[i % newsSVGs.length]}
+      <div class="nc-body">
+        <div class="nc-tag">${n.cat.toUpperCase()}</div>
+        <div class="nc-title">${n.title}</div>
+        <div class="nc-sum">${n.summary}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setNewsLang(lang, btn) {
+  currentNewsLang = lang;
+  document.querySelectorAll('.lang-b').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+function filterNews(cat, btn) {
+  currentNewsCat = cat;
+  document.querySelectorAll('.nc-cat-b').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+// ============================================================
+// PUBLIC MESSAGES
+// ============================================================
+function loadPublicMessages() {
+  if (pubMsgListener) pubMsgListener();
+  pubMsgListener = db.collection('publicMessages')
+    .orderBy('createdAt','asc')
+    .limitToLast(60)
+    .onSnapshot(snap => {
+      const cont = document.getElementById('pub-msgs-list');
+      cont.innerHTML = '';
+      snap.docs.forEach(doc => {
+        renderPublicMsg(doc.id, doc.data());
+      });
+      cont.scrollTop = cont.scrollHeight;
+    });
+}
+
+function renderPublicMsg(id, d) {
+  const cont = document.getElementById('pub-msgs-list');
+  const div = document.createElement('div');
+  div.className = 'pm-item';
+  div.id = 'pm-'+id;
+  const ts = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+  const ava = d.photoURL || makeAvatar(d.username);
+  const isLiked = d.likes && d.likes.includes(currentUser.uid);
+  div.innerHTML = `
+    <img src="${ava}" class="pm-ava" onerror="this.src='${makeAvatar(d.username)}'">
+    <div class="pm-body">
+      <div class="pm-hdr">
+        <span class="pm-name">${escHtml(d.username)}</span>
+        <span class="pm-time">${ts}</span>
+      </div>
+      <div class="pm-bub ${isLiked?'liked':''}" 
+        ondblclick="toggleMsgLike('${id}',this)" 
+        oncontextmenu="showCtxMenu(event,'${id}',this)"
+        data-msgid="${id}">${escHtml(d.text)}</div>
+      <div class="pm-act-row">
+        <button class="pm-act" onclick="toggleMsgLike('${id}',this.closest('.pm-body').querySelector('.pm-bub'))">❤️ Like</button>
+        <button class="pm-act" onclick="toggleReplyBox('${id}')">↩ Reply</button>
+        <button class="pm-act" onclick="toggleCmtBox('${id}')">💬 Comment</button>
+        ${currentUser.email===ADMIN_EMAIL ? `<button class="pm-act" onclick="deletePublicMsg('${id}')" style="color:#ffaaaa">🗑</button>` : ''}
+      </div>
+      <div class="pub-cmt-input-wrap" id="reply-box-${id}">
+        <input class="pub-cmt-inp" id="reply-inp-${id}" placeholder="Reply...">
+        <button class="pub-cmt-send" onclick="sendReply('${id}')">Send</button>
+      </div>
+      <div class="pub-cmt-input-wrap" id="cmt-box-${id}">
+        <input class="pub-cmt-inp" id="cmt-inp-${id}" placeholder="Comment...">
+        <button class="pub-cmt-send" onclick="sendComment('${id}')">Send</button>
+      </div>
+      ${(d.replies||[]).map(r=>`<div class="pm-thread"><div class="pm-reply-bub"><b>${escHtml(r.username)}</b>: ${escHtml(r.text)}</div></div>`).join('')}
+    </div>
+  `;
+  cont.appendChild(div);
+}
+
+async function sendPublicMsg() {
+  const inp = document.getElementById('pub-inp');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  inp.disabled = true;
+  try {
+    await db.collection('publicMessages').add({
+      uid: currentUser.uid,
+      username: currentUserData.username,
+      photoURL: currentUserData.photoURL || '',
+      text: txt,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      likes: [],
+      replies: [],
+      comments: []
+    });
+  } catch(e) { showToast('Error: '+e.message); }
+  inp.disabled = false;
+  inp.focus();
+}
+
+async function toggleMsgLike(id, bub) {
+  const ref = db.collection('publicMessages').doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  const likes = snap.data().likes || [];
+  const uid = currentUser.uid;
+  if (likes.includes(uid)) {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayRemove(uid)});
+    if (bub) bub.classList.remove('liked');
+  } else {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayUnion(uid)});
+    if (bub) { bub.classList.add('liked'); showHeartAnim(bub); }
+  }
+}
+
+function showHeartAnim(el) {
+  const h = document.createElement('span');
+  h.textContent = '❤️';
+  h.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;pointer-events:none;z-index:100;animation:heartPop .5s ease forwards';
+  el.style.position = 'relative';
+  el.appendChild(h);
+  setTimeout(() => h.remove(), 500);
+}
+
+function toggleReplyBox(id) {
+  const el = document.getElementById('reply-box-'+id);
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) document.getElementById('reply-inp-'+id).focus();
+}
+function toggleCmtBox(id) {
+  const el = document.getElementById('cmt-box-'+id);
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) document.getElementById('cmt-inp-'+id).focus();
+}
+
+async function sendReply(id) {
+  const inp = document.getElementById('reply-inp-'+id);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  const reply = {uid:currentUser.uid, username:currentUserData.username, text:txt, ts:Date.now()};
+  await db.collection('publicMessages').doc(id).update({
+    replies: firebase.firestore.FieldValue.arrayUnion(reply)
+  });
+  document.getElementById('reply-box-'+id).classList.remove('show');
+}
+
+async function sendComment(id) {
+  const inp = document.getElementById('cmt-inp-'+id);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  const cmt = {uid:currentUser.uid, username:currentUserData.username, text:txt, ts:Date.now()};
+  await db.collection('publicMessages').doc(id).update({
+    comments: firebase.firestore.FieldValue.arrayUnion(cmt)
+  });
+  document.getElementById('cmt-box-'+id).classList.remove('show');
+  showToast('Comment added!');
+}
+
+async function deletePublicMsg(id) {
+  if (!confirm('Delete this message?')) return;
+  await db.collection('publicMessages').doc(id).delete();
+}
+
+// ============================================================
+// PRIVATE MESSAGES
+// ============================================================
+function switchMsgMode(mode) {
+  document.getElementById('pub-section').style.display = mode==='pub'?'block':'none';
+  document.getElementById('priv-section').style.display = mode==='priv'?'block':'none';
+  document.getElementById('mm-pub').classList.toggle('active', mode==='pub');
+  document.getElementById('mm-priv').classList.toggle('active', mode==='priv');
+}
+
+async function loadPrivateUsers() {
+  try {
+    const snap = await db.collection('users').get();
+    allUsers = snap.docs.map(d=>d.data()).filter(u=>u.uid!==currentUser.uid);
+    renderPrivUsers(allUsers);
+    // Listen for unread
+    allUsers.forEach(u => listenPrivUnread(u));
+  } catch(e) {}
+}
+
+function renderPrivUsers(users) {
+  const cont = document.getElementById('priv-users-list');
+  if (!users.length) { cont.innerHTML = '<p style="color:rgba(255,255,255,.7);text-align:center;padding:20px;font-size:14px">No users yet</p>'; return; }
+  cont.innerHTML = users.map(u => `
+    <div class="priv-u-item" onclick="openPrivChat('${u.uid}','${escHtml(u.username)}','${u.photoURL||''}')">
+      <img src="${u.photoURL||makeAvatar(u.username)}" class="priv-uava" onerror="this.src='${makeAvatar(u.username)}'">
+      <div>
+        <div class="priv-uname">${escHtml(u.username)}</div>
+        <div class="priv-uemail">${u.email||''}</div>
+      </div>
+      <span class="priv-ubadge" id="priv-badge-${u.uid}">0</span>
+    </div>
+  `).join('');
+}
+
+function filterPrivUsers() {
+  const q = document.getElementById('priv-search').value.toLowerCase();
+  const filtered = allUsers.filter(u => u.username.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q));
+  renderPrivUsers(filtered);
+}
+
+function getChatId(uid1, uid2) {
+  return [uid1, uid2].sort().join('_');
+}
+
+function openPrivChat(uid, name, photo) {
+  activeChatUID = uid;
+  activeChatName = name;
+  document.getElementById('pc-name').textContent = name;
+  document.getElementById('pc-ava').src = photo || makeAvatar(name);
+  document.getElementById('pc-msgs-list').innerHTML = '';
+  document.getElementById('priv-chat-win').classList.add('open');
+  if (privChatListener) { privChatListener(); privChatListener = null; }
+  const chatId = getChatId(currentUser.uid, uid);
+  privChatListener = db.collection('privateChats').doc(chatId)
+    .collection('messages')
+    .orderBy('createdAt','asc')
+    .onSnapshot(snap => {
+      const cont = document.getElementById('pc-msgs-list');
+      cont.innerHTML = '';
+      snap.docs.forEach(doc => renderPrivMsg(doc.id, doc.data()));
+      cont.scrollTop = cont.scrollHeight;
+    });
+  // Mark read
+  clearPrivBadge(uid);
+}
+
+function renderPrivMsg(id, d) {
+  const cont = document.getElementById('pc-msgs-list');
+  const div = document.createElement('div');
+  const isMine = d.senderUid === currentUser.uid;
+  const ts = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+  div.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'}">
+      <div class="pc-bub ${isMine?'sent':'recv'}" 
+        oncontextmenu="showPrivCtxMenu(event,'${id}',${isMine})">${escHtml(d.text)}</div>
+      <div class="pc-time" style="align-self:${isMine?'flex-end':'flex-start'}">${ts}</div>
+    </div>
+  `;
+  cont.appendChild(div);
+}
+
+async function sendPrivMsg() {
+  if (!activeChatUID) return;
+  const inp = document.getElementById('pc-inp');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  const chatId = getChatId(currentUser.uid, activeChatUID);
+  try {
+    await db.collection('privateChats').doc(chatId).collection('messages').add({
+      senderUid: currentUser.uid,
+      senderName: currentUserData.username,
+      text: txt,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Increment unread for recipient
+    await db.collection('notifications').doc(activeChatUID).set({
+      unreadMessages: firebase.firestore.FieldValue.increment(1),
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function closePrivChat() {
+  document.getElementById('priv-chat-win').classList.remove('open');
+  if (privChatListener) { privChatListener(); privChatListener = null; }
+  activeChatUID = null;
+}
+
+function listenPrivUnread(u) {
+  // Simple badge check via notifications
+  db.collection('privateChats').doc(getChatId(currentUser.uid, u.uid))
+    .collection('messages')
+    .where('senderUid','==',u.uid)
+    .orderBy('createdAt','desc')
+    .limit(1)
+    .onSnapshot(snap => {
+      // Show badge if there are recent messages
+      const badge = document.getElementById('priv-badge-'+u.uid);
+      if (badge && !snap.empty) {
+        badge.classList.add('show');
+        badge.textContent = '!';
+      }
+    });
+}
+
+function clearPrivBadge(uid) {
+  const badge = document.getElementById('priv-badge-'+uid);
+  if (badge) { badge.classList.remove('show'); }
+}
+
+// Context menu for priv
+let privCtxMsgId = null;
+let privCtxIsMine = false;
+function showPrivCtxMenu(e, id, isMine) {
+  e.preventDefault();
+  privCtxMsgId = id;
+  privCtxIsMine = isMine;
+  // Simple actions - would expand with full menu
+  if (isMine) {
+    const action = prompt('Message action:\n1. Edit\n2. Delete for me\n3. Delete for everyone\nEnter 1, 2, or 3:');
+    if (action === '2' || action === '3') deletePrivMsg(id, action==='3');
+    else if (action === '1') editPrivMsg(id);
+  }
+}
+
+async function deletePrivMsg(id, forAll) {
+  if (!activeChatUID) return;
+  const chatId = getChatId(currentUser.uid, activeChatUID);
+  if (forAll) await db.collection('privateChats').doc(chatId).collection('messages').doc(id).delete();
+  else showToast('Deleted for you');
+}
+
+async function editPrivMsg(id) {
+  if (!activeChatUID) return;
+  const chatId = getChatId(currentUser.uid, activeChatUID);
+  const snap = await db.collection('privateChats').doc(chatId).collection('messages').doc(id).get();
+  if (!snap.exists) return;
+  const newTxt = prompt('Edit message:', snap.data().text);
+  if (newTxt !== null && newTxt.trim()) {
+    await db.collection('privateChats').doc(chatId).collection('messages').doc(id).update({text:newTxt.trim(),edited:true});
+  }
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function startNotifListener() {
+  db.collection('notifications').doc(currentUser.uid).onSnapshot(snap => {
+    if (!snap.exists) return;
+    const d = snap.data();
+    const count = d.unreadMessages || 0;
+    const badge = document.getElementById('hdr-notif-badge');
+    const sbBadge = document.getElementById('sb-msg-badge');
+    if (count > 0) {
+      badge.classList.add('show');
+      badge.textContent = count > 9 ? '9+' : count;
+      sbBadge.classList.add('show');
+      sbBadge.textContent = count > 9 ? '9+' : count;
+    } else {
+      badge.classList.remove('show');
+      sbBadge.classList.remove('show');
+    }
+  });
+}
+
+// ============================================================
+// TIMELINE
+// ============================================================
+async function loadTimeline() {
+  const cont = document.getElementById('tl-feed');
+  cont.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const snap = await db.collection('posts')
+      .where('visibility','==','public')
+      .orderBy('createdAt','desc')
+      .limit(20)
+      .get();
+    cont.innerHTML = '';
+    if (snap.empty) {
+      cont.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>No posts yet. Be the first!</p></div>`;
+      return;
+    }
+    snap.docs.forEach(doc => renderPostCard(doc.id, doc.data(), cont));
+  } catch(e) {
+    cont.innerHTML = `<div class="empty-state"><p>Error loading posts</p></div>`;
+  }
+}
+
+function renderPostCard(id, d, cont) {
+  const div = document.createElement('div');
+  div.className = 'post-card';
+  div.id = 'post-'+id;
+  const ts = d.createdAt ? timeSince(d.createdAt.seconds*1000) : '';
+  const ava = d.photoURL || makeAvatar(d.username);
+  const isLiked = d.likes && d.likes.includes(currentUser.uid);
+  const isOwner = d.uid === currentUser.uid;
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  div.innerHTML = `
+    <div class="post-hdr">
+      <img src="${ava}" class="post-ava" onerror="this.src='${makeAvatar(d.username)}'">
+      <span class="post-uname">${escHtml(d.username)}</span>
+      <span class="post-tm">${ts}</span>
+      <button class="post-more-btn" onclick="togglePostDD('${id}')">···</button>
+    </div>
+    ${d.imageURL ? `<img src="${d.imageURL}" class="post-img" loading="lazy" onerror="this.style.display='none'">` : ''}
+    <div class="post-title">${escHtml(d.title)}</div>
+    <div class="post-acts">
+      <button class="pa-btn ${isLiked?'liked':''}" onclick="togglePostLike('${id}',this)"><span class="hrt">❤️</span></button>
+      <button class="pa-btn" onclick="togglePostCmts('${id}')">💬 Comment</button>
+      ${(isOwner||isAdmin) ? `<button class="pa-btn" onclick="sharePost('${id}')">🔗 Share</button>` : ''}
+      <button class="pa-btn" onclick="savePost('${id}','${escHtml(d.title)}','${d.imageURL||''}')">🗂 Save</button>
+    </div>
+    <div class="post-cmts-section" id="cmts-${id}">
+      <div class="pcs-list" id="cmt-list-${id}"></div>
+      <div class="cmt-inp-row">
+        <input class="cmt-inp" id="post-cmt-${id}" placeholder="Add a comment...">
+        <button class="cmt-send" onclick="addPostComment('${id}')">Send</button>
+      </div>
+    </div>
+    <div class="post-dd" id="dd-${id}">
+      ${isOwner ? `<div class="pdd-i" onclick="editPostTitle('${id}')">✏️ Edit Title</div>` : ''}
+      ${isOwner ? `<div class="pdd-i" onclick="sharePost('${id}')">🔗 Share Link</div>` : ''}
+      ${(isOwner||isAdmin) ? `<div class="pdd-i red" onclick="deletePost('${id}')">🗑 Delete</div>` : ''}
+      ${isAdmin ? `<div class="pdd-i red" onclick="hidePost('${id}')">🚫 Hide</div>` : ''}
+      <div class="pdd-i" onclick="savePost('${id}','${escHtml(d.title)}','${d.imageURL||''}')">🗂 Save</div>
+    </div>
+  `;
+  cont.appendChild(div);
+  loadPostComments(id);
+}
+
+function togglePostDD(id) {
+  document.querySelectorAll('.post-dd').forEach(d => { if (d.id !== 'dd-'+id) d.classList.remove('open'); });
+  document.getElementById('dd-'+id).classList.toggle('open');
+}
+
+async function togglePostLike(id, btn) {
+  const ref = db.collection('posts').doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  const likes = snap.data().likes || [];
+  const uid = currentUser.uid;
+  if (likes.includes(uid)) {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayRemove(uid)});
+    btn.classList.remove('liked');
+  } else {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayUnion(uid)});
+    btn.classList.add('liked');
+  }
+}
+
+function togglePostCmts(id) {
+  document.getElementById('cmts-'+id).classList.toggle('open');
+}
+
+async function loadPostComments(id) {
+  const ref = db.collection('posts').doc(id).collection('comments').orderBy('createdAt','asc').limit(20);
+  ref.onSnapshot(snap => {
+    const cont = document.getElementById('cmt-list-'+id);
+    if (!cont) return;
+    cont.innerHTML = snap.docs.map(d => `<div class="pcs-cmt"><span class="pcs-cmt-u">${escHtml(d.data().username)}</span>${escHtml(d.data().text)}</div>`).join('');
+  });
+}
+
+async function addPostComment(id) {
+  const inp = document.getElementById('post-cmt-'+id);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  await db.collection('posts').doc(id).collection('comments').add({
+    uid: currentUser.uid,
+    username: currentUserData.username,
+    text: txt,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function editPostTitle(id) {
+  const ref = db.collection('posts').doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  const newTitle = prompt('New title:', snap.data().title);
+  if (newTitle && newTitle.trim()) await ref.update({title:newTitle.trim()});
+  loadTimeline();
+}
+
+function sharePost(id) {
+  const url = `${window.location.href.split('?')[0]}?post=${id}`;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied! 🔗'));
+}
+
+async function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  await db.collection('posts').doc(id).delete();
+  const el = document.getElementById('post-'+id);
+  if (el) el.remove();
+  showToast('Post deleted');
+}
+
+async function hidePost(id) {
+  await db.collection('posts').doc(id).update({visibility:'hidden'});
+  const el = document.getElementById('post-'+id);
+  if (el) el.remove();
+  showToast('Post hidden');
+}
+
+async function savePost(id, title, imgURL) {
+  await db.collection('users').doc(currentUser.uid).collection('saved').doc(id).set({
+    postId: id, title, imageURL: imgURL,
+    savedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  showToast('Saved! 🗂');
+}
+
+// ============================================================
+// DISCOVER
+// ============================================================
+async function loadDiscover() {
+  const cont = document.getElementById('disc-list');
+  cont.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const snap = await db.collection('users').get();
+    let users = snap.docs.map(d=>d.data()).filter(u=>u.uid!==currentUser.uid);
+    if (currentDiscFilter === 'recent') users = users.sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    else users = users.sort((a,b) => (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    cont.innerHTML = '';
+    if (!users.length) {
+      cont.innerHTML = '<div class="empty-state"><p>No users to discover yet</p></div>';
+      return;
+    }
+    for (const u of users) {
+      await renderDiscoverUser(u, cont);
+    }
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
+  }
+}
+
+async function renderDiscoverUser(u, cont) {
+  const div = document.createElement('div');
+  div.className = 'du-card';
+  const ava = u.photoURL || makeAvatar(u.username);
+  // Get latest post
+  let postHTML = '<div class="du-post-preview" style="color:var(--tl);font-size:12px">No posts yet</div>';
+  try {
+    const psnap = await db.collection('posts')
+      .where('uid','==',u.uid)
+      .where('visibility','==','public')
+      .orderBy('createdAt','desc')
+      .limit(1)
+      .get();
+    if (!psnap.empty) {
+      const p = psnap.docs[0].data();
+      const pid = psnap.docs[0].id;
+      const likeCount = (p.likes||[]).length;
+      postHTML = `
+        <div class="du-post-preview">${escHtml(p.title||'')}</div>
+        ${p.imageURL ? `<img src="${p.imageURL}" class="du-post-img" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="du-acts">
+          <button class="du-like-btn" onclick="togglePostLikeDisc('${pid}',this)">❤️ <span class="du-like-count">${likeCount}</span></button>
+          <button class="du-like-btn" onclick="togglePostCmts('${pid}')">💬 Comment</button>
+        </div>
+      `;
+    }
+  } catch(e) {}
+  div.innerHTML = `
+    <div class="du-top">
+      <img src="${ava}" class="du-ava" onerror="this.src='${makeAvatar(u.username)}'">
+      <div class="du-info">
+        <div class="du-name">(${u.username.charAt(0).toUpperCase()}) ${escHtml(u.username)}</div>
+        <div class="du-about">${escHtml(u.about||'')}</div>
+      </div>
+      <button class="du-chat-btn" onclick="startDiscoverChat('${u.uid}','${escHtml(u.username)}','${u.photoURL||''}')">💬 Chat</button>
+    </div>
+    <hr class="du-divider">
+    ${postHTML}
+  `;
+  cont.appendChild(div);
+}
+
+function startDiscoverChat(uid, name, photo) {
+  goPage('msg', null);
+  switchMsgMode('priv');
+  setTimeout(() => openPrivChat(uid, name, photo), 100);
+}
+
+async function togglePostLikeDisc(id, btn) {
+  const ref = db.collection('posts').doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  const likes = snap.data().likes || [];
+  const uid = currentUser.uid;
+  let newCount;
+  if (likes.includes(uid)) {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayRemove(uid)});
+    newCount = Math.max(0, likes.length - 1);
+  } else {
+    await ref.update({likes: firebase.firestore.FieldValue.arrayUnion(uid)});
+    newCount = likes.length + 1;
+  }
+  const span = btn.querySelector('.du-like-count');
+  if (span) span.textContent = newCount;
+}
+
+function setDiscFilter(f, btn) {
+  currentDiscFilter = f;
+  document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadDiscover();
+}
+
+// ============================================================
+// CREATE / UPLOAD
+// ============================================================
+let selectedImgFile = null;
+
+function handleImgSelect(inp) {
+  const file = inp.files[0];
+  if (!file) return;
+  selectedImgFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('img-preview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('up-ph').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setVis(v) {
+  currentVis = v;
+  document.getElementById('vis-pub').classList.toggle('active', v==='public');
+  document.getElementById('vis-priv').classList.toggle('active', v==='private');
+}
+
+async function submitPost() {
+  const title = document.getElementById('cr-title').value.trim();
+  if (!title) { showToast('Please add a title!'); return; }
+  const btn = document.getElementById('cr-submit');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  try {
+    let imageURL = '';
+    if (selectedImgFile) {
+      const ref = storage.ref(`posts/${currentUser.uid}/${Date.now()}_${selectedImgFile.name}`);
+      await ref.put(selectedImgFile);
+      imageURL = await ref.getDownloadURL();
+    }
+    await db.collection('posts').add({
+      uid: currentUser.uid,
+      username: currentUserData.username,
+      photoURL: currentUserData.photoURL || '',
+      title,
+      imageURL,
+      visibility: currentVis,
+      likes: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(currentVis==='public' ? '🌍 Posted to Timeline!' : '🔒 Saved to My Vault!');
+    document.getElementById('cr-title').value = '';
+    selectedImgFile = null;
+    document.getElementById('img-preview').style.display = 'none';
+    document.getElementById('up-ph').style.display = 'flex';
+    document.getElementById('img-file').value = '';
+  } catch(e) {
+    showToast('Upload failed: '+e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = 'POST NOW';
+}
+
+// ============================================================
+// ACCOUNT
+// ============================================================
+async function loadAccountPosts() {
+  const cont = document.getElementById('acc-grid');
+  const ava = currentUserData.photoURL || makeAvatar(currentUserData.username);
+  document.getElementById('acc-ava').src = ava;
+  document.getElementById('acc-uname').textContent = currentUserData.username;
+  document.getElementById('acc-about').textContent = currentUserData.about || 'No bio yet';
+  cont.innerHTML = '';
+  try {
+    const snap = await db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').limit(30).get();
+    if (snap.empty) { cont.innerHTML = '<p style="grid-column:span 3;text-align:center;color:var(--tl);padding:20px;font-size:13px">No posts yet</p>'; return; }
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      if (d.imageURL) {
+        const img = document.createElement('img');
+        img.src = d.imageURL;
+        img.className = 'acc-thumb';
+        img.loading = 'lazy';
+        img.onclick = () => alert(d.title);
+        cont.appendChild(img);
+      }
+    });
+  } catch(e) {}
+}
+
+// ============================================================
+// VAULT
+// ============================================================
+async function loadVault() {
+  const cont = document.getElementById('vault-body');
+  cont.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    let q = db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc');
+    if (currentVaultTab === 'post') q = q.where('visibility','==','private');
+    else if (currentVaultTab !== 'all') { cont.innerHTML = '<div class="empty-state"><p>Nothing here yet</p></div>'; return; }
+    const snap = await q.limit(20).get();
+    cont.innerHTML = '';
+    if (snap.empty) { cont.innerHTML = '<div class="empty-state"><p>Your vault is empty</p></div>'; return; }
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      if (currentVaultTab === 'post' && d.visibility !== 'private') return;
+      const div = document.createElement('div');
+      div.className = 'vault-i';
+      div.innerHTML = `
+        ${d.imageURL ? `<img src="${d.imageURL}" loading="lazy">` : ''}
+        <div class="vault-i-body">
+          <div class="vault-i-title">${escHtml(d.title)}</div>
+          <div class="vault-i-tag">${d.visibility === 'private' ? '🔒 Private' : '🌍 Public'}</div>
+        </div>
+      `;
+      cont.appendChild(div);
+    });
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state"><p>Error loading vault</p></div>';
+  }
+}
+
+function setVaultTab(tab, btn) {
+  currentVaultTab = tab;
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadVault();
+}
+
+// ============================================================
+// SAVED
+// ============================================================
+async function loadSaved() {
+  const cont = document.getElementById('saved-list');
+  cont.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid).collection('saved').orderBy('savedAt','desc').limit(20).get();
+    cont.innerHTML = '';
+    if (snap.empty) { cont.innerHTML = '<div class="empty-state"><p>Nothing saved yet</p></div>'; return; }
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className = 'saved-i';
+      div.id = 'saved-'+doc.id;
+      div.innerHTML = `
+        ${d.imageURL ? `<img src="${d.imageURL}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="saved-title">${escHtml(d.title)}</div>
+        <div class="saved-acts">
+          <button class="s-restore" onclick="restorePost('${doc.id}')">↩ Restore</button>
+          <button class="s-del" onclick="deleteSaved('${doc.id}')">🗑 Delete</button>
+        </div>
+      `;
+      cont.appendChild(div);
+    });
+  } catch(e) {}
+}
+
+async function restorePost(id) {
+  showToast('Post link restored to clipboard ✓');
+}
+async function deleteSaved(id) {
+  if (!confirm('Remove from saved?')) return;
+  await db.collection('users').doc(currentUser.uid).collection('saved').doc(id).delete();
+  const el = document.getElementById('saved-'+id);
+  if (el) el.remove();
+  showToast('Removed from saved');
+}
+
+// ============================================================
+// PREFERENCES
+// ============================================================
+function updateCharCount() {
+  const txt = document.getElementById('pref-about').value;
+  document.getElementById('char-cnt').textContent = txt.length;
+}
+
+async function savePrefs() {
+  const uname = document.getElementById('pref-uname').value.trim();
+  const about = document.getElementById('pref-about').value.trim();
+  if (!uname) { showToast('Username cannot be empty!'); return; }
+  try {
+    await db.collection('users').doc(currentUser.uid).update({username:uname, about});
+    currentUserData.username = uname;
+    currentUserData.about = about;
+    document.getElementById('acc-uname').textContent = uname;
+    document.getElementById('acc-about').textContent = about || 'No bio yet';
+    document.getElementById('dash-uname').textContent = uname + ' 👋';
+    showToast('✅ Profile updated!');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+async function handlePrefPhoto(inp) {
+  const file = inp.files[0];
+  if (!file) return;
+  showToast('Uploading photo...');
+  try {
+    const ref = storage.ref(`avatars/${currentUser.uid}/${Date.now()}`);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection('users').doc(currentUser.uid).update({photoURL:url});
+    currentUserData.photoURL = url;
+    document.getElementById('pref-ava').src = url;
+    document.getElementById('acc-ava').src = url;
+    document.getElementById('dash-uava').src = url;
+    document.getElementById('hdr-u-ava').src = url;
+    showToast('✅ Photo updated!');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function setTheme(t, btn) {
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyTheme(t, true);
+}
+
+function applyTheme(t, save) {
+  if (t === 'system') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default';
+  document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'default');
+  if (save && currentUser) {
+    db.collection('users').doc(currentUser.uid).update({theme:t}).catch(()=>{});
+    currentUserData.theme = t;
+  }
+  // Sync button state
+  const thMap = {default:'th-def',dark:'th-dark',system:'th-sys'};
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('active'));
+  const activeBtn = document.getElementById(thMap[currentUserData?.theme||'default'] || 'th-def');
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+// ============================================================
+// CONTEXT MENU (Public Messages)
+// ============================================================
+let ctxMsgId = null;
+function showCtxMenu(e, id, el) {
+  e.preventDefault();
+  ctxMsgId = id;
+  ctxTargetEl = el;
+  const menu = document.getElementById('ctx-menu');
+  const deleteOpt = document.getElementById('ctx-delete-opt');
+  deleteOpt.style.display = currentUser.email === ADMIN_EMAIL ? 'block' : 'none';
+  menu.style.top = Math.min(e.clientY, window.innerHeight-160)+'px';
+  menu.style.left = Math.min(e.clientX, window.innerWidth-170)+'px';
+  menu.classList.add('show');
+}
+
+function ctxAction(action) {
+  document.getElementById('ctx-menu').classList.remove('show');
+  if (!ctxMsgId) return;
+  if (action === 'like') toggleMsgLike(ctxMsgId, ctxTargetEl);
+  else if (action === 'reply') toggleReplyBox(ctxMsgId);
+  else if (action === 'comment') toggleCmtBox(ctxMsgId);
+  else if (action === 'delete') deletePublicMsg(ctxMsgId);
+}
+document.addEventListener('click', () => document.getElementById('ctx-menu').classList.remove('show'));
+document.addEventListener('click', () => document.querySelectorAll('.post-dd').forEach(d=>d.classList.remove('open')));
+
+// ============================================================
+// SCREENSHOT PREVENTION
+// ============================================================
+function setupScreenshotPrevention() {
+  // PrintScreen key
+  document.addEventListener('keyup', e => {
+    if (e.key === 'PrintScreen' || e.keyCode === 44) triggerScreenshotBlock();
+  });
+  // Visibility change (mobile screenshot)
+  document.addEventListener('visibilitychange', () => {
+    const activePg = document.querySelector('.page.active');
+    if (!activePg) return;
+    const pid = activePg.id;
+    const protected_ = ['pg-msg','pg-tl','pg-create','pg-vault','pg-disc'];
+    if (document.hidden && protected_.includes(pid)) triggerScreenshotBlock();
+  });
+}
+
+function triggerScreenshotBlock() {
+  const block = document.getElementById('ss-block');
+  block.classList.add('show');
+  setTimeout(() => block.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function makeAvatar(name) {
+  const n = name ? name.charAt(0).toUpperCase() : '?';
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><rect width='40' height='40' rx='20' fill='%23007BA7'/><text x='20' y='26' text-anchor='middle' font-size='18' font-family='sans-serif' fill='white'>${n}</text></svg>`;
+  return `data:image/svg+xml,${svg}`;
+}
+
+function timeSince(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<60) return 'just now';
+  if (s<3600) return Math.floor(s/60)+'m ago';
+  if (s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.style.display = 'none'; }, dur);
+}
+</script>
+</body>
+</html>
